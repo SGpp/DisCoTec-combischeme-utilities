@@ -127,6 +127,9 @@ class CombinationScheme():
                 subspacesSet.add(subspace)
         return subspacesSet
 
+    def get_dimensionality(self):
+        return len(self._lmin)
+
     def get_combination_dictionary(self):
         return self._combination_dictionary
 
