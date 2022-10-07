@@ -127,27 +127,11 @@ def get_combination_dictionary_from_file(filename):
 
 
 class CombinationScheme():
-    def __init__(self, lmax, lmin=None, boundary_points=None):
-        self._lmax = lmax
-        if lmin == None:
-            self._lmin = [1]*len(self.lmax)
-        else:
-            self._lmin = lmin
-        if boundary_points == None:
-            self._boundary_points = [2]*len(self._lmax)
-        else:
-            self._boundary_points = boundary_points
-            raise NotImplemented
-        assert (len(self._lmin) == len(self._lmax))
-        for i in range(len(lmax)):
-            assert (lmin[i] <= lmax[i])
-        self._combination_dictionary = compute_combination_dictionary(
-            lmin, lmax)
-        assert (self._combination_dictionary is not None)
+    def get_lmax(self):
+        return self._lmax
 
-    def __init__(self, filename: str, boundary_points=None):
-        self._combination_dictionary = get_combination_dictionary_from_file(
-            filename)
+    def get_lmin(self):
+        return self._lmin
 
     def get_all_subspaces(self):
         subspacesSet = set()
