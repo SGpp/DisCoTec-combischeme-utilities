@@ -1,5 +1,4 @@
 from icecream import ic
-import combischeme_utils
 import json
 
 
@@ -24,15 +23,19 @@ def readable_bytes(B):
         return '{0:.2f}_TiB'.format(B / TiB)
 
 
-def write_scheme_to_json_without_process_group_number(scheme: combischeme_utils.CombinationScheme):
+def read_data_from_json(filename):
+    with open(filename, 'r') as f:
+        data = json.load(f)
+    return data
+
+
+def write_scheme_dictionary_to_json(dictionary: dict, filename):
     schemeList = []
-    for key, value in scheme.get_combination_dictionary().items():
+    for key, value in dictionary.items():
         schemeList += [{"coeff": value, "level": list(key)}]
 
     # ic(schemeList)
     jsonString = json.dumps(schemeList)  # , indent=0)
 
-    mem = (scheme.get_total_num_points_combi()*8)
-    # ic(readable_bytes(mem))
-    with open('scheme_' + readable_bytes(mem) + '.json', 'w') as f:
+    with open(filename, 'w') as f:
         f.write(jsonString)

@@ -29,9 +29,9 @@ if __name__ == "__main__":
 
     ic(lmin, lmax)
 
-    scheme = combischeme_utils.CombinationScheme(lmax, lmin)
+    scheme = combischeme_utils.CombinationSchemeFromMaxLevel(lmax, lmin)
 
-    combischeme_output.write_scheme_to_json_without_process_group_number(
+    combischeme_utils.write_scheme_to_json(
         scheme)
 
     # minimum memory requirement of full grids in scheme in bytes

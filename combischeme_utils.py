@@ -6,6 +6,8 @@ import itertools as it
 from icecream import ic
 from scipy.special import binom
 
+import combischeme_output
+
 
 def get_level_of_index(index, lmax):
     if index == 0:
@@ -36,6 +38,12 @@ def get_num_dof_of_full_grid(level_vector, boundary):
     for b in boundary:
         assert (b == 2)
     return np.prod([2**l + 1 for l in level_vector])
+
+
+def get_num_dof_of_subspace(level_vector, boundary):
+    for b in boundary:
+        assert (b == 2)
+    return np.prod([2**(l-1) if l > 0 else 2 for l in level_vector])
 
 # computes the active set by minimum level difference
 # todo also implement more sensible schemes like the tilted plane by Christoph Kowitz
@@ -110,6 +118,14 @@ def compute_combination_dictionary(lmin, lmax):
     return combination_dictionary
 
 
+def get_combination_dictionary_from_file(filename):
+    combination_dictionary = {}
+    data = combischeme_output.read_data_from_json(filename)
+    for grid in data:
+        combination_dictionary[tuple(grid['level'])] = grid['coeff']
+    return combination_dictionary
+
+
 class CombinationScheme():
     def __init__(self, lmax, lmin=None, boundary_points=None):
         self._lmax = lmax
@@ -128,6 +144,10 @@ class CombinationScheme():
         self._combination_dictionary = compute_combination_dictionary(
             lmin, lmax)
         assert (self._combination_dictionary is not None)
+
+    def __init__(self, filename: str, boundary_points=None):
+        self._combination_dictionary = get_combination_dictionary_from_file(
+            filename)
 
     def get_all_subspaces(self):
         subspacesSet = set()
@@ -167,3 +187,59 @@ class CombinationScheme():
 
     def get_nonzero_coefficients(self):
         return self._combination_dictionary.values()
+
+
+class CombinationSchemeFromMaxLevel(CombinationScheme):
+    def __init__(self, lmax, lmin=None, boundary_points=None):
+        self._lmax = lmax
+        if lmin == None:
+            self._lmin = [1]*len(self.lmax)
+        else:
+            self._lmin = lmin
+        if boundary_points == None:
+            self._boundary_points = [2]*len(self._lmax)
+        else:
+            self._boundary_points = boundary_points
+            raise NotImplemented
+        assert (len(self._lmin) == len(self._lmax))
+        for i in range(len(lmax)):
+            assert (lmin[i] <= lmax[i])
+        self._combination_dictionary = compute_combination_dictionary(
+            lmin, lmax)
+        assert (self._combination_dictionary is not None)
+        ic(self._combination_dictionary)
+
+
+class CombinationSchemeFromCombinationDictionary(CombinationScheme):
+    def __init__(self, dictionary, boundary_points=None):
+        self._combination_dictionary = dictionary
+        assert (self._combination_dictionary is not None)
+        self._lmax = np.max(
+            list(self.get_levels_of_nonzero_coefficient()), axis=0)
+        self._lmin = np.min(
+            list(self.get_levels_of_nonzero_coefficient()), axis=0)
+        ic(self._lmax, self._lmin)
+        assert (len(self._lmin) == len(self._lmax))
+        for i in range(len(self._lmax)):
+            assert (self._lmin[i] <= self._lmax[i])
+        if boundary_points == None:
+            self._boundary_points = [2]*len(self._lmax)
+        else:
+            self._boundary_points = boundary_points
+            raise NotImplemented
+
+
+class CombinationSchemeFromFile(CombinationSchemeFromCombinationDictionary):
+    def __init__(self, filename: str, boundary_points=None):
+        dictionary = get_combination_dictionary_from_file(
+            filename)
+        super().__init__(dictionary, boundary_points)
+
+
+def write_scheme_to_json(scheme: CombinationScheme):
+    # assuming double data type = 8 bytes = 64 bit
+    mem = (scheme.get_total_num_points_combi()*8)
+    # ic(readable_bytes(mem))
+    filename = 'scheme_' + combischeme_output.readable_bytes(mem) + '.json'
+    combischeme_output.write_scheme_dictionary_to_json(
+        scheme.get_combination_dictionary(), filename)
