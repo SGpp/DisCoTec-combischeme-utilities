@@ -39,7 +39,7 @@ def compute_active_set(lmin, lmax):
                     for i in range(len(lmax))]
     listOfAllGridsUpToLmax = list(it.product(*listOfRanges))
     diagonalIndex = 0
-    levelSum = get_min_level_sum()+diagonalIndex
+    levelSum = get_min_level_sum(lmin,lmax)+diagonalIndex
     s = set()
     for grid in listOfAllGridsUpToLmax:
         if (np.sum(grid) == levelSum and (np.array(grid) >= np.array(lmin)).all()):
@@ -129,6 +129,9 @@ class CombinationScheme():
 
     def get_dimensionality(self):
         return len(self._lmin)
+
+    def get_num_component_grids(self):
+        return len(self._combination_dictionary)
 
     def get_combination_dictionary(self):
         return self._combination_dictionary
