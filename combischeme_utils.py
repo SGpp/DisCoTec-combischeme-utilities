@@ -30,10 +30,13 @@ def get_min_level_sum(lmin, lmax):
     lm[maxInd] = lmax[maxInd]
     return lm.sum()
 
+def get_num_dof_of_full_grid(level_vector, boundary):
+    for b in boundary:
+        assert (b == 2)
+    return np.prod([2**l + 1 for l in level_vector])
+
 # computes the active set by minimum level difference
 #todo also implement more sensible schemes like the tilted plane by Christoph Kowitz
-
-
 def compute_active_set(lmin, lmax):
     listOfRanges = [list(range(0, lmax[i]+1))
                     for i in range(len(lmax))]
@@ -107,12 +110,17 @@ def compute_combination_dictionary(lmin, lmax):
 
 
 class CombinationScheme():
-    def __init__(self, lmax, lmin=None):
+    def __init__(self, lmax, lmin=None, boundary_points=None):
         self._lmax = lmax
         if lmin == None:
             self._lmin = [1]*len(self.lmax)
         else:
             self._lmin = lmin
+        if boundary_points == None:
+            self._boundary_points = [2]*len(self._lmax)
+        else:
+            self._boundary_points = boundary_points
+            raise NotImplemented
         assert (len(self._lmin) == len(self._lmax))
         for i in range(len(lmax)):
             assert (lmin[i] <= lmax[i])
@@ -132,6 +140,22 @@ class CombinationScheme():
 
     def get_num_component_grids(self):
         return len(self._combination_dictionary)
+
+    def get_total_num_points_combi(self):
+        total_num_points = 0
+        for level in self.get_levels_of_nonzero_coefficient():
+            total_num_points += get_num_dof_of_full_grid(level, self._boundary_points)
+        return total_num_points
+
+    def get_num_grids_per_level_sum(self):
+        num_grids_per_level_sum = {}
+        for level in self.get_levels_of_nonzero_coefficient():
+            levelSum = np.sum([l for l in level])
+            if levelSum in num_grids_per_level_sum:
+                num_grids_per_level_sum[levelSum] += 1
+            else:
+                num_grids_per_level_sum[levelSum] = 1
+        return num_grids_per_level_sum
 
     def get_combination_dictionary(self):
         return self._combination_dictionary
