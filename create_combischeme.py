@@ -20,32 +20,25 @@ if __name__ == "__main__":
         "--lmax",
         nargs="*",
         type=int,
-        default=[4,5,6],
+        default=[4, 5, 6],
     )
     args = parser.parse_args()
     # access CLI options
     lmin = args.lmin
     lmax = args.lmax
 
-    ic(lmin,lmax)
+    ic(lmin, lmax)
 
     scheme = combischeme_utils.CombinationScheme(lmax, lmin)
 
-    ic(scheme.get_num_component_grids())
-    ic(scheme.get_num_grids_per_level_sum())
-    ic(scheme.get_total_num_points_combi())
+    combischeme_output.write_scheme_to_json_without_process_group_number(
+        scheme)
 
     # minimum memory requirement of full grids in scheme in bytes
     mem = (scheme.get_total_num_points_combi()*8)
     ic(combischeme_output.readable_bytes(mem))
 
-    schemeList = []
-    for key, value in scheme.get_combination_dictionary().items():
-        # ic(assignment[group_no])
-        schemeList += [{"coeff": value, "level": list(key)}]
-
-    # ic(schemeList)
-    jsonString = json.dumps(schemeList)  # , indent=0)
-
-    with open('scheme_' + combischeme_output.readable_bytes(mem) + '.json', 'w') as f:
-        f.write(jsonString)
+    ic(scheme.get_num_component_grids())
+    ic(scheme.get_num_grids_per_level_sum())
+    ic(scheme.get_total_num_points_combi())
+    # ic(scheme.get_total_num_points_sparse())

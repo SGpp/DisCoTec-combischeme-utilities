@@ -11,12 +11,13 @@ def get_level_of_index(index, lmax):
     if index == 0:
         return 0
 # cf. https://python-programs.com/python-program-to-find-position-of-rightmost-set-bit/
-#def getFirstSetBitPosition(numb):
+# def getFirstSetBitPosition(numb):
     # Calculate and the value of log2(n&-n)+1 which gives the first set bit position
     # of the given number and store it in a variable say result_pos.
     result_pos = math.log2(index & -index)
     # Return the value of result_pos(Which is the position of the first set bit).
     return lmax - int(result_pos)
+
 
 def get_downward_closed_set_from_level_vector(level_vector):
     subs = [list(range(0, x + 1)) for x in level_vector]
@@ -30,19 +31,22 @@ def get_min_level_sum(lmin, lmax):
     lm[maxInd] = lmax[maxInd]
     return lm.sum()
 
+
 def get_num_dof_of_full_grid(level_vector, boundary):
     for b in boundary:
         assert (b == 2)
     return np.prod([2**l + 1 for l in level_vector])
 
 # computes the active set by minimum level difference
-#todo also implement more sensible schemes like the tilted plane by Christoph Kowitz
+# todo also implement more sensible schemes like the tilted plane by Christoph Kowitz
+
+
 def compute_active_set(lmin, lmax):
     listOfRanges = [list(range(0, lmax[i]+1))
                     for i in range(len(lmax))]
     listOfAllGridsUpToLmax = list(it.product(*listOfRanges))
     diagonalIndex = 0
-    levelSum = get_min_level_sum(lmin,lmax)+diagonalIndex
+    levelSum = get_min_level_sum(lmin, lmax)+diagonalIndex
     s = set()
     for grid in listOfAllGridsUpToLmax:
         if (np.sum(grid) == levelSum and (np.array(grid) >= np.array(lmin)).all()):
@@ -56,7 +60,7 @@ def compute_combination_dictionary(lmin, lmax):
     combination_dictionary = {}
     firstLevelDifference = lmax[0] - lmin[0]
     uniformLevelDifference = [(lmax[i] - lmin[i]) ==
-                               firstLevelDifference for i in range(dim)]
+                              firstLevelDifference for i in range(dim)]
     if uniformLevelDifference and firstLevelDifference >= dim:
         # implements the standard formula, cf. "Sparse Grids in a Nutshell"
         # (cf. https://link.springer.com/chapter/10.1007/978-3-642-31703-3_3)
@@ -76,7 +80,7 @@ def compute_combination_dictionary(lmin, lmax):
         # algorithm that can be derived by Hamming distance
         # (cf. Harding 2016, https://link.springer.com/content/pdf/10.1007%2F978-3-319-28262-6_4.pdf)
         ic("non-binomial")
-        for l in compute_active_set(lmin,lmax):
+        for l in compute_active_set(lmin, lmax):
             combination_dictionary[l] = 1
 
         dict_of_subspaces = {}
@@ -89,18 +93,15 @@ def compute_combination_dictionary(lmin, lmax):
 
         # # remove subspaces which are too much
         while (set(dict_of_subspaces.values()) != set([1])):
-
             for subspace in dict_of_subspaces:
                 currentCount = dict_of_subspaces[subspace]
                 if currentCount != 1:
                     diff = currentCount - 1
 
                     if subspace in combination_dictionary:
-
                         combination_dictionary[subspace] -= diff
                         if combination_dictionary[subspace] == 0:
                             del combination_dictionary[subspace]
-
                     else:
                         combination_dictionary[subspace] = -diff
 
@@ -144,7 +145,8 @@ class CombinationScheme():
     def get_total_num_points_combi(self):
         total_num_points = 0
         for level in self.get_levels_of_nonzero_coefficient():
-            total_num_points += get_num_dof_of_full_grid(level, self._boundary_points)
+            total_num_points += get_num_dof_of_full_grid(
+                level, self._boundary_points)
         return total_num_points
 
     def get_num_grids_per_level_sum(self):
@@ -165,4 +167,3 @@ class CombinationScheme():
 
     def get_nonzero_coefficients(self):
         return self._combination_dictionary.values()
-
