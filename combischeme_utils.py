@@ -21,6 +21,55 @@ def get_level_of_index(index, lmax):
     return lmax - int(result_pos)
 
 
+def partition_integer(integer_to_partition):
+    """compute partition of positive integer
+    -- cf. accel_ast at https://jeromekelleher.net/generating-integer-partitions.html"""
+    a = [0 for i in range(integer_to_partition + 1)]
+    k = 1
+    y = integer_to_partition - 1
+    while k != 0:
+        x = a[k - 1] + 1
+        k -= 1
+        while 2 * x <= y:
+            a[k] = x
+            y -= x
+            k += 1
+        l = k + 1
+        while x <= y:
+            a[k] = x
+            a[l] = y
+            yield a[:k + 2]
+            x += 1
+            y -= 1
+        a[k] = x + y
+        y = x + y - 1
+        yield a[:k + 1]
+    return a
+
+
+def partition_integer_in_num_partitions(integer_to_partition, num_partitions):
+    assert (num_partitions <= integer_to_partition)
+    partition_list = list(partition_integer(integer_to_partition))
+    partition_list = [p for p in partition_list if len(p) == num_partitions]
+    return partition_list
+
+
+def partition_integer_in_num_partitions_with_zeros(integer_to_partition, num_partitions):
+    partition_list = []
+    shorter = partition_integer(
+        integer_to_partition)
+    for partition in shorter:
+        if len(list(partition)) > num_partitions:
+            continue
+        # add zeros to partition to make it of length num_partitions
+        partition = list(partition)
+        partition.extend([0]*(num_partitions-len(partition)))
+        ic(partition)
+        permutations = [list(p) for p in it.permutations(partition)]
+        partition_list.extend(permutations)
+    return partition_list
+
+
 def get_downward_closed_set_from_level_vector(level_vector):
     subs = [list(range(0, x + 1)) for x in level_vector]
     down_set = it.product(*subs)

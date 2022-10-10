@@ -3,6 +3,7 @@ import combischeme_utils
 import combischeme_output
 from icecream import ic
 import numpy as np
+import scipy
 import pytest
 
 # run this test file with `pytest test_combischeme_utils.py``
@@ -56,3 +57,32 @@ def test_write_combischeme(dim=4):
     lmax = [6]*dim
     scheme = combischeme_utils.CombinationSchemeFromMaxLevel(lmax, lmin)
     combischeme_utils.write_scheme_to_json(scheme)
+
+
+def test_partition_integer(integer=6):
+    partitions = combischeme_utils.partition_integer(integer)
+    partitions = list(partitions)
+    ic(partitions)
+    assert (len(list(partitions[0])) == integer)
+    assert ([1]*integer in partitions)
+    assert ([integer] in partitions)
+    single_partition = combischeme_utils.partition_integer_in_num_partitions(
+        integer, 1)
+    assert (list(single_partition) == [[integer]])
+    single_partition_of_ones = combischeme_utils.partition_integer_in_num_partitions(
+        integer, integer)
+    assert (list(single_partition_of_ones) == [[1]*integer])
+    single_partition_of_ones = combischeme_utils.partition_integer_in_num_partitions(
+        integer, integer)
+    assert (list(single_partition_of_ones) == [[1]*integer])
+    # assert (len(partitions) == scipy.special.binom(integer, i))
+
+
+def test_partition_integer_in_num_partitions_with_zeros(integer=6):
+    filled_partitions = combischeme_utils.partition_integer_in_num_partitions_with_zeros(
+        integer, integer)
+    for i in range(integer):
+        zeros = [0]*(integer)
+        zeros[i] = integer
+        assert zeros in filled_partitions
+    assert ([1]*integer in filled_partitions)
