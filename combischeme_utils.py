@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from __future__ import annotations
 import math
 import numpy as np
 import itertools as it
@@ -9,7 +10,7 @@ from scipy.special import binom
 import combischeme_output
 
 
-def get_level_of_index(index, lmax):
+def get_level_of_index(index, lmax) -> int:
     if index == 0:
         return 0
 # cf. https://python-programs.com/python-program-to-find-position-of-rightmost-set-bit/
@@ -47,14 +48,14 @@ def partition_integer(integer_to_partition):
     return a
 
 
-def partition_integer_in_num_partitions(integer_to_partition, num_partitions):
+def partition_integer_in_num_partitions(integer_to_partition, num_partitions) -> list:
     assert (num_partitions <= integer_to_partition)
     partition_list = list(partition_integer(integer_to_partition))
     partition_list = [p for p in partition_list if len(p) == num_partitions]
     return partition_list
 
 
-def partition_integer_in_num_partitions_with_zeros(integer_to_partition, num_partitions):
+def partition_integer_in_num_partitions_with_zeros(integer_to_partition, num_partitions) -> list:
     partition_list = []
     shorter = partition_integer(
         integer_to_partition)
@@ -70,26 +71,26 @@ def partition_integer_in_num_partitions_with_zeros(integer_to_partition, num_par
     return partition_list
 
 
-def get_downward_closed_set_from_level_vector(level_vector):
+def get_downward_closed_set_from_level_vector(level_vector) -> set:
     subs = [list(range(0, x + 1)) for x in level_vector]
     down_set = it.product(*subs)
     return down_set
 
 
-def get_min_level_sum(lmin, lmax):
+def get_min_level_sum(lmin, lmax) -> int:
     maxInd = np.argmax(np.array(lmax)-np.array(lmin))
     lm = np.array(lmin)
     lm[maxInd] = lmax[maxInd]
     return lm.sum()
 
 
-def get_num_dof_of_full_grid(level_vector, boundary):
+def get_num_dof_of_full_grid(level_vector, boundary) -> int:
     for b in boundary:
         assert (b == 2)
     return np.prod([2**l + 1 for l in level_vector])
 
 
-def get_num_dof_of_subspace(level_vector, boundary):
+def get_num_dof_of_subspace(level_vector, boundary) -> int:
     for b in boundary:
         assert (b == 2)
     return np.prod([2**(l-1) if l > 0 else 2 for l in level_vector])
@@ -112,7 +113,7 @@ def compute_active_set(lmin, lmax):
     return s
 
 
-def compute_combination_dictionary(lmin, lmax):
+def compute_combination_dictionary(lmin, lmax) -> dict:
     dim = len(lmin)
     combination_dictionary = {}
     firstLevelDifference = lmax[0] - lmin[0]
@@ -167,7 +168,7 @@ def compute_combination_dictionary(lmin, lmax):
     return combination_dictionary
 
 
-def get_combination_dictionary_from_file(filename):
+def get_combination_dictionary_from_file(filename) -> dict:
     combination_dictionary = {}
     data = combischeme_output.read_data_from_json(filename)
     for grid in data:
@@ -176,33 +177,33 @@ def get_combination_dictionary_from_file(filename):
 
 
 class CombinationScheme():
-    def get_lmax(self):
+    def get_lmax(self) -> list[int]:
         return self._lmax
 
-    def get_lmin(self):
+    def get_lmin(self) -> list[int]:
         return self._lmin
 
-    def get_all_subspaces(self):
+    def get_all_subspaces(self) -> set:
         subspacesSet = set()
         for l in self._combination_dictionary:
             for subspace in get_downward_closed_set_from_level_vector(l):
                 subspacesSet.add(subspace)
         return subspacesSet
 
-    def get_dimensionality(self):
+    def get_dimensionality(self) -> int:
         return len(self._lmin)
 
-    def get_num_component_grids(self):
+    def get_num_component_grids(self) -> int:
         return len(self._combination_dictionary)
 
-    def get_total_num_points_combi(self):
+    def get_total_num_points_combi(self) -> int:
         total_num_points = 0
         for level in self.get_levels_of_nonzero_coefficient():
             total_num_points += get_num_dof_of_full_grid(
                 level, self._boundary_points)
         return total_num_points
 
-    def get_num_grids_per_level_sum(self):
+    def get_num_grids_per_level_sum(self) -> dict:
         num_grids_per_level_sum = {}
         for level in self.get_levels_of_nonzero_coefficient():
             levelSum = np.sum([l for l in level])
@@ -212,7 +213,7 @@ class CombinationScheme():
                 num_grids_per_level_sum[levelSum] = 1
         return num_grids_per_level_sum
 
-    def get_combination_dictionary(self):
+    def get_combination_dictionary(self) -> dict:
         return self._combination_dictionary
 
     def get_levels_of_nonzero_coefficient(self):
@@ -220,6 +221,9 @@ class CombinationScheme():
 
     def get_nonzero_coefficients(self):
         return self._combination_dictionary.values()
+
+    def get_coefficient(self, level: tuple) -> float:
+        return self._combination_dictionary[level]
 
 
 class CombinationSchemeFromMaxLevel(CombinationScheme):
