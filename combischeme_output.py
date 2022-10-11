@@ -1,10 +1,12 @@
+
+from __future__ import annotations
 from icecream import ic
 import json
 
 
-# cf. https://stackoverflow.com/a/31631711
 def readable_bytes(B):
     """Return the given bytes as a human friendly KiB, MiB, GB, or TiB string."""
+    # cf. https://stackoverflow.com/a/31631711
     B = float(B)
     KiB = float(1024)
     MiB = float(KiB ** 2)  # 1,048,576
@@ -29,11 +31,25 @@ def read_data_from_json(filename):
     return data
 
 
-def write_scheme_dictionary_to_json(dictionary: dict, filename):
+def write_scheme_dictionary_to_json(dictionary: dict, filename: str):
     schemeList = []
     for key, value in dictionary.items():
         level_int = [int(i) for i in key]
         schemeList += [{"coeff": value, "level": list(level_int)}]
+
+    # ic(schemeList)
+    jsonString = json.dumps(schemeList)  # , indent=0)
+
+    with open(filename, 'w') as f:
+        f.write(jsonString)
+
+
+def write_assignment_to_json(assignment: list[dict], filename: str):
+    schemeList = []
+    for group_no in range(len(assignment)):
+        # ic(assignment[group_no])
+        schemeList += [{"coeff": coeff, "level": [int(l) for l in level], "group_no": group_no}
+                    for level, coeff in assignment[group_no].items()]
 
     # ic(schemeList)
     jsonString = json.dumps(schemeList)  # , indent=0)
