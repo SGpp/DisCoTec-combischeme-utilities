@@ -64,7 +64,7 @@ def partition_integer_in_num_partitions_with_zeros(integer_to_partition, num_par
         # add zeros to partition to make it of length num_partitions
         partition = list(partition)
         partition.extend([0]*(num_partitions-len(partition)))
-        ic(partition)
+        # ic(partition)
         permutations = [list(p) for p in it.permutations(partition)]
         partition_list.extend(permutations)
     return partition_list
@@ -122,21 +122,21 @@ def compute_combination_dictionary(lmin, lmax):
         # implements the standard formula, cf. "Sparse Grids in a Nutshell"
         # (cf. https://link.springer.com/chapter/10.1007/978-3-642-31703-3_3)
         ic("binomial")
-        listOfRanges = [list(range(lmin[i], lmax[i]+1))
-                        for i in range(len(lmax))]
-        ic(listOfRanges)
         for q in range(dim):
             coeff = (-1)**q * binom(dim-1, q)
             levelSum = sum(lmin) + firstLevelDifference - q
             # ic(coeff, levelSum)
-            for grid in it.product(*listOfRanges):
+            for offset in partition_integer_in_num_partitions_with_zeros(firstLevelDifference-q, dim):
+                # ic(offset)
+                grid = np.array(lmin) + np.array(offset)
                 if (np.sum(grid) == levelSum and (np.array(grid) >= np.array(lmin)).all()):
-                    combination_dictionary[grid] = coeff
+                    combination_dictionary[tuple(grid)] = coeff
 
     else:
         # algorithm that can be derived by Hamming distance
         # (cf. Harding 2016, https://link.springer.com/content/pdf/10.1007%2F978-3-319-28262-6_4.pdf)
         ic("non-binomial")
+        ic("warning: no other active set implemented yet, will give same result as binomial but take longer!")
         for l in compute_active_set(lmin, lmax):
             combination_dictionary[l] = 1
 
@@ -240,7 +240,6 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
         self._combination_dictionary = compute_combination_dictionary(
             lmin, lmax)
         assert (self._combination_dictionary is not None)
-        ic(self._combination_dictionary)
 
 
 class CombinationSchemeFromCombinationDictionary(CombinationScheme):

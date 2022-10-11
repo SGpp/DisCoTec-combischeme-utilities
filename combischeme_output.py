@@ -32,7 +32,8 @@ def read_data_from_json(filename):
 def write_scheme_dictionary_to_json(dictionary: dict, filename):
     schemeList = []
     for key, value in dictionary.items():
-        schemeList += [{"coeff": value, "level": list(key)}]
+        level_int = [int(i) for i in key]
+        schemeList += [{"coeff": value, "level": list(level_int)}]
 
     # ic(schemeList)
     jsonString = json.dumps(schemeList)  # , indent=0)
