@@ -13,6 +13,7 @@ def validate_combischeme(scheme: combischeme_utils.CombinationScheme):
     assert (scheme.get_levels_of_nonzero_coefficient() is not None)
     assert (len(list(scheme.get_levels_of_nonzero_coefficient())
             [0]) == scheme.get_dimensionality())
+    ic(scheme.get_combination_dictionary())
     assert (scheme.get_nonzero_coefficients() is not None)
     ic(scheme.get_nonzero_coefficients())
     assert (not (0. in scheme.get_nonzero_coefficients()))
@@ -49,9 +50,10 @@ def test_create_non_regular_combischeme(dim=3):
 def test_create_degenerate_combischeme(dim=3):
     lmin = [1]*dim
     lmax = [6]*dim
-    lmax[0] = 1
+    lmax[0] = lmin[0]
     scheme = combischeme_utils.CombinationSchemeFromMaxLevel(lmax, lmin)
     validate_combischeme(scheme)
+    assert(len(scheme.get_nonzero_coefficients()) > 1)
 
 
 def test_create_combischeme_from_dict():
