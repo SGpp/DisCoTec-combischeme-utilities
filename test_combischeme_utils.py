@@ -25,13 +25,31 @@ def test_create_regular_combischeme(dim=3):
     lmax = [6]*dim
     scheme = combischeme_utils.CombinationSchemeFromMaxLevel(lmax, lmin)
     print(np.sum(scheme.get_nonzero_coefficients))
+    for d in range(dim):
+        corner = lmin.copy()
+        corner[d] = lmax[d]
+        assert (tuple(corner) in list(
+            scheme.get_levels_of_nonzero_coefficient()))
+        for d2 in range(dim):
+            corner_neighbor = corner.copy()
+            corner_neighbor[d2] += 1
+            assert (tuple(corner_neighbor) not in list(
+                scheme.get_levels_of_nonzero_coefficient()))
     validate_combischeme(scheme)
 
 
-def test_create_nonregular_combischeme(dim=3):
+def test_create_non_regular_combischeme(dim=3):
     lmin = [1]*dim
     lmax = [6]*dim
     lmax[0] = 5
+    scheme = combischeme_utils.CombinationSchemeFromMaxLevel(lmax, lmin)
+    validate_combischeme(scheme)
+
+
+def test_create_degenerate_combischeme(dim=3):
+    lmin = [1]*dim
+    lmax = [6]*dim
+    lmax[0] = 1
     scheme = combischeme_utils.CombinationSchemeFromMaxLevel(lmax, lmin)
     validate_combischeme(scheme)
 
