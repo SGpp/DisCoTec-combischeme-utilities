@@ -272,10 +272,12 @@ class CombinationSchemeFromFile(CombinationSchemeFromCombinationDictionary):
         super().__init__(dictionary, boundary_points)
 
 
-def write_scheme_to_json(scheme: CombinationScheme):
-    # assuming double data type = 8 bytes = 64 bit
-    mem = (scheme.get_total_num_points_combi()*8)
-    # ic(readable_bytes(mem))
-    filename = 'scheme_' + combischeme_output.readable_bytes(mem) + '.json'
+def write_scheme_to_json(scheme: CombinationScheme, file_name: str = None):
+    if file_name == None:
+        # assuming double data type = 8 bytes = 64 bit
+        mem = (scheme.get_total_num_points_combi()*8)
+        # ic(readable_bytes(mem))
+        file_name = 'scheme_' + \
+            combischeme_output.readable_bytes(mem) + '.json'
     combischeme_output.write_scheme_dictionary_to_json(
-        scheme.get_combination_dictionary(), filename)
+        scheme.get_combination_dictionary(), file_name)
