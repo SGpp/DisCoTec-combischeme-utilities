@@ -3,6 +3,7 @@
 import argparse
 import numpy as np
 from icecream import ic
+import combischeme_output
 import combischeme_utils
 
 if __name__ == "__main__":
@@ -26,57 +27,31 @@ if __name__ == "__main__":
     highest_level_sum = int(np.max(list(num_grids_per_level_sum.keys())))
     ic(num_grids_per_level_sum, highest_level_sum)
 
+    scheme1, scheme2 = combischeme_utils.split_scheme_by_level_sum(scheme)
+    combischeme_utils.write_scheme_to_json(
+        scheme1, filename[:-5]+"_split1.json")
+    combischeme_utils.write_scheme_to_json(
+        scheme2, filename[:-5]+"_split2.json")
 
-    gridsForSystems = list(scheme.get_levels_of_nonzero_coefficient())
-    gridsForSystem1 = []
-    gridsForSystem2 = []
-    ic(len(gridsForSystem1), len(gridsForSystem2), len(gridsForSystems))
+    # compute sg dofs before
+    sg_dof_initial = combischeme_utils.get_num_dof_of_subspaces(
+        scheme.get_necessary_sparse_grid_spaces(), [2]*scheme.get_dimensionality())
+    ic(sg_dof_initial, combischeme_output.readable_bytes(sg_dof_initial*8))
 
-    gridsToIterate = gridsForSystems.copy()
-    rr = 0
-    # # for different splits -- the sum of weights is assumed to be 1.,
-    # # if system 1's weight is 0.5, we have an even split.
-    weight_system_1 = 0.5
-    dim_to_split_at = int(dim/2)
-    for level in gridsToIterate:
-        max_dims = np.argwhere(level == np.max(level))
-        lower_dims_diff_to_lmax = np.array(
-            lmax[:dim_to_split_at])-np.array(level)[:dim_to_split_at]
-        norm_lower_dims = - \
-            np.linalg.norm(lower_dims_diff_to_lmax, ord=0.99)
-        higher_dims_diff_to_lmax = np.array(
-            lmax[dim_to_split_at:])-np.array(level[dim_to_split_at:])
-        norm_higher_dims = - \
-            np.linalg.norm(higher_dims_diff_to_lmax, ord=0.99)
+    # compute sg dofs after
+    subspaces1 = scheme1.get_necessary_sparse_grid_spaces()
+    subspaces2 = scheme2.get_necessary_sparse_grid_spaces()
+    sg_dof1 = combischeme_utils.get_num_dof_of_subspaces(
+        subspaces1, [2]*scheme.get_dimensionality())
+    sg_dof2 = combischeme_utils.get_num_dof_of_subspaces(
+        subspaces2, [2]*scheme.get_dimensionality())
+    ic(sg_dof1, sg_dof2)
+    ic(combischeme_output.readable_bytes(sg_dof1*8),
+       combischeme_output.readable_bytes(sg_dof2*8))
 
-        if weight_system_1 * norm_lower_dims > (1.-weight_system_1) * norm_higher_dims:
-            gridsForSystems.remove(level)
-            gridsForSystem1.append(level)
-            continue
-        elif weight_system_1 * norm_lower_dims < (1.-weight_system_1) * norm_higher_dims:
-            gridsForSystems.remove(level)
-            gridsForSystem2.append(level)
-            continue
-        else:
-            if rr % 2 == 0:
-                gridsForSystems.remove(level)
-                gridsForSystem1.append(level)
-            else:
-                gridsForSystems.remove(level)
-                gridsForSystem2.append(level)
-            rr += 1
+    # compute conjoint sg dofs
+    conjoint_subspaces = subspaces1.intersection(subspaces2)
+    sg_dof_conjoint =combischeme_utils.get_num_dof_of_subspaces(
+        conjoint_subspaces, [2]*scheme.get_dimensionality())
+    ic(sg_dof_conjoint, combischeme_output.readable_bytes(sg_dof_conjoint*8))
 
-    assert(len(gridsForSystems) == 0)
-    ic(len(gridsForSystem1), len(gridsForSystem2), len(gridsForSystems))
-
-    # build the new combination dictionaries
-    dictionary1 = {}
-    for level in gridsForSystem1:
-        dictionary1[level] = scheme.get_coefficient(level)
-    scheme1 = combischeme_utils.CombinationSchemeFromCombinationDictionary(dictionary1)
-    combischeme_utils.write_scheme_to_json(scheme1, filename[:-5]+"_split1.json")
-    dictionary2 = {}
-    for level in gridsForSystem2:
-        dictionary2[level] = scheme.get_coefficient(level)
-    scheme2 = combischeme_utils.CombinationSchemeFromCombinationDictionary(dictionary2)
-    combischeme_utils.write_scheme_to_json(scheme2, filename[:-5]+"_split2.json")
