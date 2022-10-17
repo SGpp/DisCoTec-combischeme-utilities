@@ -100,15 +100,28 @@ def get_num_dof_of_subspace(level_vector, boundary) -> int:
 
 
 def compute_active_set(lmin, lmax):
-    listOfRanges = [list(range(0, lmax[i]+1))
-                    for i in range(len(lmax))]
-    listOfAllGridsUpToLmax = list(it.product(*listOfRanges))
+    dim = len(lmin)
+    firstLevelDifference = lmax[0] - lmin[0]
+    uniformLevelDifference = [(lmax[i] - lmin[i]) ==
+                              firstLevelDifference for i in range(dim)]
     diagonalIndex = 0
-    levelSum = get_min_level_sum(lmin, lmax)+diagonalIndex
     s = set()
-    for grid in listOfAllGridsUpToLmax:
-        if (np.sum(grid) == levelSum and (np.array(grid) >= np.array(lmin)).all()):
-            s.add(grid)
+    if uniformLevelDifference and firstLevelDifference >= dim:
+        levelSum = sum(lmin) + firstLevelDifference - diagonalIndex
+        for offset in partition_integer_in_num_partitions_with_zeros(firstLevelDifference-diagonalIndex, dim):
+            # ic(offset)
+            grid = np.array(lmin) + np.array(offset)
+            assert (np.sum(grid) == levelSum)
+            if (np.array(grid) >= np.array(lmin)).all():
+                s.add(tuple(grid))
+    else:
+        listOfRanges = [list(range(0, lmax[i]+1))
+                        for i in range(len(lmax))]
+        listOfAllGridsUpToLmax = list(it.product(*listOfRanges))
+        levelSum = get_min_level_sum(lmin, lmax)+diagonalIndex
+        for grid in listOfAllGridsUpToLmax:
+            if (np.sum(grid) == levelSum and (np.array(grid) >= np.array(lmin)).all()):
+                s.add(grid)
 
     return s
 

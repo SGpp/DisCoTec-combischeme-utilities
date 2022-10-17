@@ -5,6 +5,7 @@ from icecream import ic
 import numpy as np
 import scipy
 import pytest
+import time
 
 # run this test file with `pytest test_combischeme_utils.py``
 
@@ -106,3 +107,32 @@ def test_partition_integer_in_num_partitions_with_zeros(integer=6):
         zeros[i] = integer
         assert zeros in filled_partitions
     assert ([1]*integer in filled_partitions)
+
+
+def test_compute_active_set(dim=6):
+    lmin = [2]*dim
+    lmax = [8]*dim
+    tic = time.perf_counter()
+    active_set1 = combischeme_utils.compute_active_set(lmin, lmax)
+    toc = time.perf_counter()
+    time1 = toc - tic
+    print(f"first active set in {time1:0.4f}seconds")
+    ic(active_set1)
+    assert active_set1.intersection([(2, 2, 2, 2, 2, 8)]) != set()
+    assert active_set1.intersection([(2, 2, 2, 2, 8, 2)]) != set()
+    assert active_set1.intersection([(2, 2, 2, 8, 2, 2)]) != set()
+    assert active_set1.intersection([(2, 2, 8, 2, 2, 2)]) != set()
+    assert active_set1.intersection([(2, 8, 2, 2, 2, 2)]) != set()
+    assert active_set1.intersection([(8, 2, 2, 2, 2, 2)]) != set()
+
+    lmin[0] += 1
+    tic = time.perf_counter()
+    active_set2 = combischeme_utils.compute_active_set(lmin, lmax)
+    toc = time.perf_counter()
+    time2 = toc - tic
+    print(f"second active set in {time2:0.4f}seconds")
+
+    ic(active_set2)
+    # assert active_set1.intersection(active_set2) == active_set2
+    assert len(active_set1) == len(active_set2) + 1
+    assert time1 < time2
