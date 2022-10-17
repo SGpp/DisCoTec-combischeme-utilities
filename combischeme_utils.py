@@ -77,6 +77,14 @@ def get_downward_closed_set_from_level_vector(level_vector) -> set:
     return down_set
 
 
+def get_downward_closed_set_from_level_vectors(level_vectors) -> set:
+    down_set = set()
+    for level_vector in level_vectors:
+        down_set.update(
+            get_downward_closed_set_from_level_vector(level_vector))
+    return down_set
+
+
 def get_min_level_sum(lmin, lmax) -> int:
     maxInd = np.argmax(np.array(lmax)-np.array(lmin))
     lm = np.array(lmin)
@@ -257,6 +265,11 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
         self._combination_dictionary = compute_combination_dictionary(
             lmin, lmax)
         assert (self._combination_dictionary is not None)
+
+    def get_necessary_sparse_grid_spaces(self) -> set:
+        lmax_reduced = [max(self._lmax[i]-1, self._lmin[i])
+                        for i in range(len(self._lmax))]
+        return get_downward_closed_set_from_level_vectors(compute_active_set(self._lmin, lmax_reduced))
 
 
 class CombinationSchemeFromCombinationDictionary(CombinationScheme):

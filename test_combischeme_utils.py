@@ -136,3 +136,20 @@ def test_compute_active_set(dim=6):
     # assert active_set1.intersection(active_set2) == active_set2
     assert len(active_set1) == len(active_set2) + 1
     assert time1 < time2
+
+
+def test_necessary_sparse_grid_spaces(dim=6):
+    lmin = [1]*dim
+    lmax = [6]*dim
+    scheme = combischeme_utils.CombinationSchemeFromMaxLevel(lmax, lmin)
+    # this should be a downward closed set up to a reduced level sum
+    necessary_subspaces = scheme.get_necessary_sparse_grid_spaces()
+    assert (tuple(lmin) in list(necessary_subspaces))
+    for d in range(dim):
+        corner = lmin.copy()
+        corner[d] = lmax[d] - 1
+        assert (tuple(corner) in list(necessary_subspaces))
+        for d2 in range(dim):
+            corner_neighbor = corner.copy()
+            corner_neighbor[d2] += 1
+            assert (tuple(corner_neighbor) not in list(necessary_subspaces))
