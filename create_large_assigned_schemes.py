@@ -21,10 +21,17 @@ if __name__ == "__main__":
         type=int,
         default=[4, 5, 6],
     )
+    parser.add_argument(
+        "--num_groups",
+        nargs=2,
+        type=int,
+        default=[32,16],
+    )
     args = parser.parse_args()
     # access CLI options
     lmin = args.lmin
     lmax = args.lmax
+    num_process_groups = args.num_groups
 
     ic(lmin, lmax)
 
@@ -40,7 +47,6 @@ if __name__ == "__main__":
 
     scheme1, scheme2 = combischeme_utils.split_scheme_by_level_sum(
         scheme)
-    num_process_groups = [20, 23]
 
     assignment1, assigned_FG_size1 = combischeme_utils.assign_combischeme_to_groups(
         scheme1, num_process_groups[0])
