@@ -98,15 +98,28 @@ def get_num_dof_of_full_grid(level_vector, boundary) -> int:
     return np.prod([2**l + 1 for l in level_vector])
 
 
+def get_num_dof_of_full_grids(level_vectors, boundary) -> int:
+    num_dof = 0
+    for level_vector in level_vectors:
+        num_dof += get_num_dof_of_full_grid(level_vector, boundary)
+    return num_dof
+
+
 def get_num_dof_of_subspace(level_vector, boundary) -> int:
     for b in boundary:
         assert (b == 2)
     return np.prod([2**(l-1) if l > 0 else 2 for l in level_vector])
 
+
+def get_num_dof_of_subspaces(level_vectors: set(tuple), boundary) -> int:
+    num_dof = 0
+    for level_vector in level_vectors:
+        num_dof += get_num_dof_of_subspace(level_vector, boundary)
+    return num_dof
+
+
 # computes the active set by minimum level difference
 # todo also implement more sensible schemes like the tilted plane by Christoph Kowitz
-
-
 def compute_active_set(lmin, lmax):
     dim = len(lmin)
     firstLevelDifference = lmax[0] - lmin[0]

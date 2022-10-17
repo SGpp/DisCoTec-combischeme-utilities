@@ -153,3 +153,20 @@ def test_necessary_sparse_grid_spaces(dim=6):
             corner_neighbor = corner.copy()
             corner_neighbor[d2] += 1
             assert (tuple(corner_neighbor) not in list(necessary_subspaces))
+
+    num_sg_dof = combischeme_utils.get_num_dof_of_subspaces(
+        necessary_subspaces, boundary=[2]*dim)
+    # regression test
+    assert num_sg_dof == 159489
+
+
+def test_get_num_dof():
+    boundary = [2]*3
+    level_vectors = [[2, 2, 2], [2, 2, 3], [2, 3, 2],  [3, 2, 2]]
+    # fg dof should be 5^3 + 3 * 5^2*9 = 800
+    num_fg_dof = combischeme_utils.get_num_dof_of_full_grids(level_vectors, boundary)
+    assert num_fg_dof ==800
+    # sg dof should be 2^3 + 3*2^2*4 = 56
+    num_sg_dof = combischeme_utils.get_num_dof_of_subspaces(level_vectors, boundary)
+    assert num_sg_dof == 56
+
