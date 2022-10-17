@@ -54,7 +54,7 @@ def test_create_degenerate_combischeme(dim=3):
     lmax[0] = lmin[0]
     scheme = combischeme_utils.CombinationSchemeFromMaxLevel(lmax, lmin)
     validate_combischeme(scheme)
-    assert(len(scheme.get_nonzero_coefficients()) > 1)
+    assert (len(scheme.get_nonzero_coefficients()) > 1)
 
 
 def test_create_combischeme_from_dict():
@@ -233,3 +233,25 @@ def test_split_scheme(dim=4):
     conjoint_all_subspaces = all_subspaces1.intersection(all_subspaces2)
     assert conjoint_all_subspaces == conjoint_reduced_subspaces
 
+
+def test_integration_create_split_assign(dim=4):
+    lmin = [1]*dim
+    lmax = [6]*dim
+    scheme = combischeme_utils.CombinationSchemeFromMaxLevel(lmax, lmin)
+    scheme1, scheme2 = combischeme_utils.split_scheme_by_level_sum(scheme)
+    num_process_groups1 = 16
+    num_process_groups2 = 13
+    assignment1, assigned_FG_size1 = combischeme_utils.assign_combischeme_to_groups(
+        scheme1, num_process_groups1)
+    assignment2, assigned_FG_size2 = combischeme_utils.assign_combischeme_to_groups(
+        scheme2, num_process_groups2)
+    assert (len(assignment1) == num_process_groups1)
+    assert (len(assignment2) == num_process_groups2)
+    assert np.max(assigned_FG_size1) < np.min(assigned_FG_size1)*1.2
+    assert np.max(assigned_FG_size1) < np.min(assigned_FG_size2)
+
+    combischeme_output.write_assignment_to_json(
+        assignment1, "scheme_test_split_1_"+str(num_process_groups1)+"groups.json")
+
+    combischeme_output.write_assignment_to_json(
+        assignment2, "scheme_test_split_2_"+str(num_process_groups2)+"groups.json")

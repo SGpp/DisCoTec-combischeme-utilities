@@ -34,29 +34,11 @@ if __name__ == "__main__":
     totalNumPointsCombi = scheme.get_total_num_points_combi()
 
     ic(scheme.get_num_grids_per_level_sum())
-    ic(totalNumPointsCombi, totalNumPointsCombi/1e13)
+    ic(totalNumPointsCombi, totalNumPointsCombi/1e13,
+       combischeme_output.readable_bytes(totalNumPointsCombi*8))
 
-    levels = list(scheme.get_levels_of_nonzero_coefficient())
-    levels.sort(key=lambda x: combischeme_utils.get_num_dof_of_full_grid(
-        x, [2]*dim), reverse=True)
-    ic(levels[:5])
-
-    assignment = []
-    for i in range(num_process_groups):
-        assignment.append({})
-    assigned_FG_size = [0.]*num_process_groups
-    # ic(assignment,assigned_FG_size)
-    nextIndex = 0
-    for level in levels:
-        assignment[nextIndex][level] = scheme.get_coefficient(level)
-        assigned_FG_size[nextIndex] += combischeme_utils.get_num_dof_of_full_grid(level, [
-                                                                                  2]*dim)
-        # this is where load balancing happens!
-        nextIndex = np.argmin(assigned_FG_size)
-    ic(assigned_FG_size)
-    ic([len(a) for a in assignment])
-    assert (sum(assigned_FG_size) == totalNumPointsCombi)
-    assert (sum([len(a) for a in assignment]) == len(levels))
+    assignment, assigned_FG_size = combischeme_utils.assign_combischeme_to_groups(
+        scheme, num_process_groups)
 
     for a in assigned_FG_size:
         assert (a*2*8/1e9/(5**6) < 1.)

@@ -230,6 +230,10 @@ class CombinationScheme():
     def get_num_component_grids(self) -> int:
         return len(self._combination_dictionary)
 
+    def get_boundary_points(self) -> list:
+        assert self._boundary_points is not None
+        return self._boundary_points
+
     def get_total_num_points_combi(self) -> int:
         total_num_points = 0
         for level in self.get_levels_of_nonzero_coefficient():
@@ -402,3 +406,32 @@ def split_scheme_by_level_sum(scheme: CombinationScheme) -> tuple(CombinationSch
     for level in gridsForSystem2:
         dictionary2[level] = scheme.get_coefficient(level)
     return (CombinationSchemeFromCombinationDictionary(dictionary1), CombinationSchemeFromCombinationDictionary(dictionary2))
+
+
+def assign_combischeme_to_groups(scheme: CombinationScheme, num_process_groups: int) -> list(dict):
+    dim = scheme.get_dimensionality()
+    total_num_points_combi = scheme.get_total_num_points_combi()
+
+    levels = list(scheme.get_levels_of_nonzero_coefficient())
+    levels.sort(key=lambda x: get_num_dof_of_full_grid(
+        x, [2]*dim), reverse=True)
+    ic(levels[:5])
+
+    assignment = []
+    for i in range(num_process_groups):
+        assignment.append({})
+    assigned_FG_size = [0.]*num_process_groups
+    # ic(assignment,assigned_FG_size)
+    nextIndex = 0
+    for level in levels:
+        assignment[nextIndex][level] = scheme.get_coefficient(level)
+        assigned_FG_size[nextIndex] += get_num_dof_of_full_grid(
+            level, scheme.get_boundary_points())
+        # this is where load balancing happens!
+        nextIndex = np.argmin(assigned_FG_size)
+
+    ic(assigned_FG_size)
+    ic([len(a) for a in assignment])
+    assert (sum(assigned_FG_size) == total_num_points_combi)
+    assert (sum([len(a) for a in assignment]) == len(levels))
+    return assignment, assigned_FG_size
