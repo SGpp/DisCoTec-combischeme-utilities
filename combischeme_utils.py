@@ -10,6 +10,13 @@ from scipy.special import binom
 import combischeme_output
 
 
+def shadows(level_vector_that_maybe_shadows, level_vector_that_is_maybe_shadowed) -> bool:
+    for l1, l2 in zip(level_vector_that_maybe_shadows, level_vector_that_is_maybe_shadowed):
+        if l1 < l2:
+            return False
+    return True
+
+
 def get_level_of_index(index, lmax) -> int:
     if index == 0:
         return 0
@@ -72,7 +79,7 @@ def partition_integer_in_num_partitions_with_zeros(integer_to_partition, num_par
 
 
 def get_downward_closed_set_from_level_vector(level_vector) -> set:
-    subs = [list(range(0, x + 1)) for x in level_vector]
+    subs = [tuple(range(0, x + 1)) for x in level_vector]
     down_set = it.product(*subs)
     return down_set
 
@@ -217,13 +224,6 @@ class CombinationScheme():
     def get_lmin(self) -> list[int]:
         return self._lmin
 
-    def get_all_subspaces(self) -> set:
-        subspacesSet = set()
-        for l in self._combination_dictionary:
-            for subspace in get_downward_closed_set_from_level_vector(l):
-                subspacesSet.add(subspace)
-        return subspacesSet
-
     def get_dimensionality(self) -> int:
         return len(self._lmin)
 
@@ -254,10 +254,33 @@ class CombinationScheme():
         return self._combination_dictionary.keys()
 
     def get_nonzero_coefficients(self):
+        # the active front will have coefficients = 1
+        # (but they may not be the only ones)
         return self._combination_dictionary.values()
 
     def get_coefficient(self, level: tuple) -> float:
         return self._combination_dictionary[level]
+
+    def get_sparse_grid_spaces(self) -> set:
+        spaces = get_downward_closed_set_from_level_vectors(
+            self.get_levels_of_nonzero_coefficient())
+        assert spaces is not None
+        assert spaces != set()
+        return spaces
+
+    def get_necessary_sparse_grid_spaces(self):
+        downward_closed_set = self.get_sparse_grid_spaces()
+        # remove from downward closed set if there is only one level of coefficient 1 that shadows this subspace
+        subspaces_to_remove = set()
+        for subspace in downward_closed_set:
+            shadowing_grids = [
+                l for l in self.get_levels_of_nonzero_coefficient() if shadows(l, subspace)]
+            if len(shadowing_grids) == 1 and self.get_combination_dictionary()[shadowing_grids[0]] == 1:
+                subspaces_to_remove.add(subspace)
+        # ic(subspaces_to_remove)
+        downward_closed_set.difference_update(subspaces_to_remove)
+        assert downward_closed_set != set()
+        return downward_closed_set
 
 
 class CombinationSchemeFromMaxLevel(CombinationScheme):

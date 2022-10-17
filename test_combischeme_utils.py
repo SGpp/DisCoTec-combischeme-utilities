@@ -138,13 +138,16 @@ def test_compute_active_set(dim=6):
     assert time1 < time2
 
 
-def test_necessary_sparse_grid_spaces(dim=6):
+def test_necessary_sparse_grid_spaces(dim=3):
     lmin = [1]*dim
     lmax = [6]*dim
     scheme = combischeme_utils.CombinationSchemeFromMaxLevel(lmax, lmin)
+    subspaces = scheme.get_sparse_grid_spaces()
     # this should be a downward closed set up to a reduced level sum
     necessary_subspaces = scheme.get_necessary_sparse_grid_spaces()
+    assert len(necessary_subspaces) < len(subspaces)
     assert (tuple(lmin) in list(necessary_subspaces))
+    assert (tuple([0]*len(lmin)) in list(necessary_subspaces))
     for d in range(dim):
         corner = lmin.copy()
         corner[d] = lmax[d] - 1
@@ -157,16 +160,28 @@ def test_necessary_sparse_grid_spaces(dim=6):
     num_sg_dof = combischeme_utils.get_num_dof_of_subspaces(
         necessary_subspaces, boundary=[2]*dim)
     # regression test
-    assert num_sg_dof == 159489
+    if dim == 3:
+        assert num_sg_dof == 1505
+    if dim == 6:
+        assert num_sg_dof == 159489
+
+    other_scheme = combischeme_utils.CombinationSchemeFromCombinationDictionary(
+        scheme.get_combination_dictionary())
+    other_subspaces = scheme.get_sparse_grid_spaces()
+    other_necessary_subspaces = other_scheme.get_necessary_sparse_grid_spaces()
+    assert other_subspaces == subspaces
+    assert other_necessary_subspaces == necessary_subspaces
 
 
 def test_get_num_dof():
     boundary = [2]*3
     level_vectors = [[2, 2, 2], [2, 2, 3], [2, 3, 2],  [3, 2, 2]]
     # fg dof should be 5^3 + 3 * 5^2*9 = 800
-    num_fg_dof = combischeme_utils.get_num_dof_of_full_grids(level_vectors, boundary)
-    assert num_fg_dof ==800
+    num_fg_dof = combischeme_utils.get_num_dof_of_full_grids(
+        level_vectors, boundary)
+    assert num_fg_dof == 800
     # sg dof should be 2^3 + 3*2^2*4 = 56
-    num_sg_dof = combischeme_utils.get_num_dof_of_subspaces(level_vectors, boundary)
+    num_sg_dof = combischeme_utils.get_num_dof_of_subspaces(
+        level_vectors, boundary)
     assert num_sg_dof == 56
 
