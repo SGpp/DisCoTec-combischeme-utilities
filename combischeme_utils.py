@@ -343,3 +343,62 @@ def write_scheme_to_json(scheme: CombinationScheme, file_name: str = None):
             combischeme_output.readable_bytes(mem) + '.json'
     combischeme_output.write_scheme_dictionary_to_json(
         scheme.get_combination_dictionary(), file_name)
+
+
+def get_common_subspaces(scheme1: CombinationScheme, scheme2: CombinationScheme) -> set:
+    return scheme1.get_sparse_grid_spaces().intersection(scheme2.get_sparse_grid_spaces())
+
+
+def split_scheme_by_level_sum(scheme: CombinationScheme) -> tuple(CombinationScheme, CombinationScheme):
+    """splits a combination scheme into two: input is assumed to be valid regular combination scheme"""
+    gridsForSystems = list(scheme.get_levels_of_nonzero_coefficient())
+    dim = scheme.get_dimensionality()
+    lmax = scheme.get_lmax()
+    gridsForSystem1 = []
+    gridsForSystem2 = []
+    ic(len(gridsForSystem1), len(gridsForSystem2), len(gridsForSystems))
+
+    gridsToIterate = gridsForSystems.copy()
+    rr = 0
+    # # for different splits -- the sum of weights is assumed to be 1.,
+    # # if system 1's weight is 0.5, we have an even split.
+    weight_system_1 = 0.5
+    dim_to_split_at = int(dim/2)
+    for level in gridsToIterate:
+        lower_dims_diff_to_lmax = np.array(
+            lmax[:dim_to_split_at])-np.array(level)[:dim_to_split_at]
+        norm_lower_dims = - \
+            np.linalg.norm(lower_dims_diff_to_lmax, ord=0.99)
+        higher_dims_diff_to_lmax = np.array(
+            lmax[dim_to_split_at:])-np.array(level[dim_to_split_at:])
+        norm_higher_dims = - \
+            np.linalg.norm(higher_dims_diff_to_lmax, ord=0.99)
+
+        if weight_system_1 * norm_lower_dims > (1.-weight_system_1) * norm_higher_dims:
+            gridsForSystems.remove(level)
+            gridsForSystem1.append(level)
+            continue
+        elif weight_system_1 * norm_lower_dims < (1.-weight_system_1) * norm_higher_dims:
+            gridsForSystems.remove(level)
+            gridsForSystem2.append(level)
+            continue
+        else:
+            if rr % 2 == 0:
+                gridsForSystems.remove(level)
+                gridsForSystem1.append(level)
+            else:
+                gridsForSystems.remove(level)
+                gridsForSystem2.append(level)
+            rr += 1
+
+    assert (len(gridsForSystems) == 0)
+    ic(len(gridsForSystem1), len(gridsForSystem2), len(gridsForSystems))
+
+    # build the new combination dictionaries
+    dictionary1 = {}
+    for level in gridsForSystem1:
+        dictionary1[level] = scheme.get_coefficient(level)
+    dictionary2 = {}
+    for level in gridsForSystem2:
+        dictionary2[level] = scheme.get_coefficient(level)
+    return (CombinationSchemeFromCombinationDictionary(dictionary1), CombinationSchemeFromCombinationDictionary(dictionary2))
