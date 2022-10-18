@@ -51,10 +51,13 @@ if __name__ == "__main__":
     assignment1, assigned_FG_size1 = combischeme_utils.assign_combischeme_to_groups(
         scheme1, num_process_groups[0])
 
+    assignment2, assigned_FG_size2 = combischeme_utils.assign_combischeme_to_groups(
+        scheme2, num_process_groups[1])
+
     combischeme_output.write_assignment_to_json(
         assignment1, "scheme_large_" + '-'.join([str(l) for l in lmax]) + "_split1_"+str(num_process_groups[0])+"groups.json")
     combischeme_output.write_assignment_to_json(
-        assignment1, "scheme_large_" + '-'.join([str(l) for l in lmax]) + "_split2_"+str(num_process_groups[1])+"groups.json")
+        assignment2, "scheme_large_" + '-'.join([str(l) for l in lmax]) + "_split2_"+str(num_process_groups[1])+"groups.json")
 
     # here goes all the diagnostic output, which takes long and you can abort the script if you're not interested
     ic("diagnostic output")
