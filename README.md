@@ -2,6 +2,7 @@
 
 Python utilities to create (combination technique schemes) input files for the [DisCoTec](https://github.com/SGpp/DisCoTec) code.
 
+![pytest workflow](https://github.com/SGpp/DisCoTec-combischeme-utilities/actions/workflows/python-package.yml/badge.svg)
 
 ## Combination Schemes
 
