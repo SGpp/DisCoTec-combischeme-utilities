@@ -79,6 +79,7 @@ because this allows the code to use some optimizations which will make it run a 
 
 - always assumes both boundary points on level 0
 - only 50/50 splits of divided combination scheme
+- memory computations assume 8 byte data types such as double
 
 ## Acknowledgements
 
