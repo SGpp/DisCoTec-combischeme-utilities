@@ -79,7 +79,7 @@ because this allows the code to use some optimizations which will make it run a 
 - always assumes both boundary points on level 0
 - only 50/50 splits of divided combination scheme
 
-### Acknowledgements
+## Acknowledgements
 
 Some of the code originated in the [EXAHD project](https://ipvs.informatik.uni-stuttgart.de/SGS/EXAHD/) (at the time, in [this repo](https://gitlab.lrz.de/sparse_grids/gene_python_interface_clean))
 and was written by Christoph Kowitz, Mario Heene, and Alfredo Parra Hinojosa.
