@@ -154,59 +154,71 @@ def compute_active_set(lmin, lmax):
     return s
 
 
-def compute_combination_dictionary(lmin, lmax) -> dict:
+def compute_regular_combination_dictionary(lmin, levelDifference: int) -> dict:
+    # implements the standard formula, cf. "Sparse Grids in a Nutshell"
+    # (cf. https://link.springer.com/chapter/10.1007/978-3-642-31703-3_3)
     dim = len(lmin)
     combination_dictionary = {}
+    for q in range(dim):
+        coeff = (-1)**q * binom(dim-1, q)
+        levelSum = sum(lmin) + levelDifference - q
+        # ic(coeff, levelSum)
+        for offset in partition_integer_in_num_partitions_with_zeros(lvelDifference-q, dim):
+            # ic(offset)
+            grid = np.array(lmin) + np.array(offset)
+            if (np.sum(grid) == levelSum and (np.array(grid) >= np.array(lmin)).all()):
+                combination_dictionary[tuple(grid)] = coeff
+    return combination_dictionary
+
+
+def compute_adaptive_combination_dictionary(active_set) -> dict:
+    # algorithm that can be derived by Hamming distance
+    # (cf. Harding 2016, https://link.springer.com/content/pdf/10.1007%2F978-3-319-28262-6_4.pdf)
+    combination_dictionary = {}
+    for l in active_set:
+        combination_dictionary[l] = 1
+
+    dict_of_subspaces = {}
+    for l in combination_dictionary:
+        for subspace in get_downward_closed_set_from_level_vector(l):
+            if subspace in dict_of_subspaces:
+                dict_of_subspaces[subspace] += 1
+            else:
+                dict_of_subspaces[subspace] = 1
+
+    # # remove subspaces which are too much
+    while (set(dict_of_subspaces.values()) != set([1])):
+        for subspace in dict_of_subspaces:
+            currentCount = dict_of_subspaces[subspace]
+            if currentCount != 1:
+                diff = currentCount - 1
+
+                if subspace in combination_dictionary:
+                    combination_dictionary[subspace] -= diff
+                    if combination_dictionary[subspace] == 0:
+                        del combination_dictionary[subspace]
+                else:
+                    combination_dictionary[subspace] = -diff
+
+                for l in get_downward_closed_set_from_level_vector(subspace):
+                    dict_of_subspaces[l] -= diff
+    return combination_dictionary
+
+
+def compute_combination_dictionary(lmin, lmax) -> dict:
+    dim = len(lmin)
     firstLevelDifference = lmax[0] - lmin[0]
     uniformLevelDifference = [(lmax[i] - lmin[i]) ==
                               firstLevelDifference for i in range(dim)]
     if uniformLevelDifference and firstLevelDifference >= dim:
-        # implements the standard formula, cf. "Sparse Grids in a Nutshell"
-        # (cf. https://link.springer.com/chapter/10.1007/978-3-642-31703-3_3)
         ic("binomial")
-        for q in range(dim):
-            coeff = (-1)**q * binom(dim-1, q)
-            levelSum = sum(lmin) + firstLevelDifference - q
-            # ic(coeff, levelSum)
-            for offset in partition_integer_in_num_partitions_with_zeros(firstLevelDifference-q, dim):
-                # ic(offset)
-                grid = np.array(lmin) + np.array(offset)
-                if (np.sum(grid) == levelSum and (np.array(grid) >= np.array(lmin)).all()):
-                    combination_dictionary[tuple(grid)] = coeff
+        return compute_regular_combination_dictionary(lmin, firstLevelDifference)
 
     else:
-        # algorithm that can be derived by Hamming distance
-        # (cf. Harding 2016, https://link.springer.com/content/pdf/10.1007%2F978-3-319-28262-6_4.pdf)
         ic("non-binomial")
+        active_set = compute_active_set(lmin, lmax)
         ic("warning: no other active set implemented yet, will give same result as binomial but take longer!")
-        for l in compute_active_set(lmin, lmax):
-            combination_dictionary[l] = 1
-
-        dict_of_subspaces = {}
-        for l in combination_dictionary:
-            for subspace in get_downward_closed_set_from_level_vector(l):
-                if subspace in dict_of_subspaces:
-                    dict_of_subspaces[subspace] += 1
-                else:
-                    dict_of_subspaces[subspace] = 1
-
-        # # remove subspaces which are too much
-        while (set(dict_of_subspaces.values()) != set([1])):
-            for subspace in dict_of_subspaces:
-                currentCount = dict_of_subspaces[subspace]
-                if currentCount != 1:
-                    diff = currentCount - 1
-
-                    if subspace in combination_dictionary:
-                        combination_dictionary[subspace] -= diff
-                        if combination_dictionary[subspace] == 0:
-                            del combination_dictionary[subspace]
-                    else:
-                        combination_dictionary[subspace] = -diff
-
-                    for l in get_downward_closed_set_from_level_vector(subspace):
-                        dict_of_subspaces[l] -= diff
-    return combination_dictionary
+        return compute_adaptive_combination_dictionary(active_set)
 
 
 def get_combination_dictionary_from_file(filename) -> dict:
@@ -345,7 +357,7 @@ class CombinationSchemeFromFile(CombinationSchemeFromCombinationDictionary):
 
 
 def write_scheme_to_json(scheme: CombinationScheme, file_name: str = None):
-    if file_name == None:
+    if file_name is None:
         # assuming double data type = 8 bytes = 64 bit
         mem = (scheme.get_total_num_points_combi()*8)
         # ic(readable_bytes(mem))

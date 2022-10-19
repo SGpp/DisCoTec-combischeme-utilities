@@ -48,7 +48,7 @@ def write_assignment_to_json(assignment: list[dict], filename: str):
     for group_no in range(len(assignment)):
         # ic(assignment[group_no])
         schemeList += [{"coeff": coeff, "level": [int(l) for l in level], "group_no": group_no}
-                    for level, coeff in assignment[group_no].items()]
+                       for level, coeff in assignment[group_no].items()]
 
     # ic(schemeList)
     jsonString = json.dumps(schemeList)  # , indent=0)
