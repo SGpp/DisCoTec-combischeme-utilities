@@ -163,7 +163,7 @@ def compute_regular_combination_dictionary(lmin, levelDifference: int) -> dict:
         coeff = (-1)**q * binom(dim-1, q)
         levelSum = sum(lmin) + levelDifference - q
         # ic(coeff, levelSum)
-        for offset in partition_integer_in_num_partitions_with_zeros(lvelDifference-q, dim):
+        for offset in partition_integer_in_num_partitions_with_zeros(levelDifference-q, dim):
             # ic(offset)
             grid = np.array(lmin) + np.array(offset)
             if (np.sum(grid) == levelSum and (np.array(grid) >= np.array(lmin)).all()):
