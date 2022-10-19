@@ -25,7 +25,7 @@ if __name__ == "__main__":
         "--num_groups",
         nargs=2,
         type=int,
-        default=[32,16],
+        default=[32, 16],
     )
     args = parser.parse_args()
     # access CLI options
@@ -89,6 +89,6 @@ if __name__ == "__main__":
 
     # compute conjoint sg dofs
     conjoint_subspaces = subspaces1.intersection(subspaces2)
-    sg_dof_conjoint =combischeme_utils.get_num_dof_of_subspaces(
+    sg_dof_conjoint = combischeme_utils.get_num_dof_of_subspaces(
         conjoint_subspaces, [2]*scheme.get_dimensionality())
     ic(sg_dof_conjoint, combischeme_output.readable_bytes(sg_dof_conjoint*8))

@@ -296,15 +296,15 @@ class CombinationScheme():
 class CombinationSchemeFromMaxLevel(CombinationScheme):
     def __init__(self, lmax, lmin=None, boundary_points=None):
         self._lmax = lmax
-        if lmin == None:
+        if lmin is None:
             self._lmin = [1]*len(self.lmax)
         else:
             self._lmin = lmin
-        if boundary_points == None:
+        if boundary_points is None:
             self._boundary_points = [2]*len(self._lmax)
         else:
             self._boundary_points = boundary_points
-            raise NotImplemented
+            raise NotImplementedError("boundary points not implemented yet")
         assert (len(self._lmin) == len(self._lmax))
         for i in range(len(lmax)):
             assert (lmin[i] <= lmax[i])
@@ -330,11 +330,11 @@ class CombinationSchemeFromCombinationDictionary(CombinationScheme):
         assert (len(self._lmin) == len(self._lmax))
         for i in range(len(self._lmax)):
             assert (self._lmin[i] <= self._lmax[i])
-        if boundary_points == None:
+        if boundary_points is None:
             self._boundary_points = [2]*len(self._lmax)
         else:
             self._boundary_points = boundary_points
-            raise NotImplemented
+            raise NotImplementedError("boundary points not implemented yet")
 
 
 class CombinationSchemeFromFile(CombinationSchemeFromCombinationDictionary):
