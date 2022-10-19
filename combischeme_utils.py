@@ -11,10 +11,7 @@ import combischeme_output
 
 
 def shadows(level_vector_that_maybe_shadows, level_vector_that_is_maybe_shadowed) -> bool:
-    for l1, l2 in zip(level_vector_that_maybe_shadows, level_vector_that_is_maybe_shadowed):
-        if l1 < l2:
-            return False
-    return True
+    return not any(np.greater(level_vector_that_is_maybe_shadowed, level_vector_that_maybe_shadows))
 
 
 def get_level_of_index(index, lmax) -> int:
