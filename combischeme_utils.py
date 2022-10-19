@@ -29,7 +29,7 @@ def get_level_of_index(index, lmax) -> int:
     return lmax - int(result_pos)
 
 
-def partition_integer(integer_to_partition):
+def partition_integer(integer_to_partition: int):
     """compute partition of positive integer
     -- cf. accel_ast at https://jeromekelleher.net/generating-integer-partitions.html"""
     a = [0 for i in range(integer_to_partition + 1)]
@@ -55,14 +55,14 @@ def partition_integer(integer_to_partition):
     return a
 
 
-def partition_integer_in_num_partitions(integer_to_partition, num_partitions) -> list:
+def partition_integer_in_num_partitions(integer_to_partition: int, num_partitions: int) -> list:
     assert (num_partitions <= integer_to_partition)
     partition_list = list(partition_integer(integer_to_partition))
     partition_list = [p for p in partition_list if len(p) == num_partitions]
     return partition_list
 
 
-def partition_integer_in_num_partitions_with_zeros(integer_to_partition, num_partitions) -> list:
+def partition_integer_in_num_partitions_with_zeros(integer_to_partition: int, num_partitions: int) -> list:
     partition_list = []
     shorter = partition_integer(
         integer_to_partition)
@@ -272,14 +272,20 @@ class CombinationScheme():
         assert spaces != set()
         return spaces
 
-    def get_necessary_sparse_grid_spaces(self):
+    def get_necessary_sparse_grid_spaces(self) -> set:
         downward_closed_set = self.get_sparse_grid_spaces()
         # remove from downward closed set if there is only one level of coefficient 1 that shadows this subspace
         subspaces_to_remove = set()
         for subspace in downward_closed_set:
-            shadowing_grids = [
-                l for l in self.get_levels_of_nonzero_coefficient() if shadows(l, subspace)]
-            if len(shadowing_grids) == 1 and self.get_combination_dictionary()[shadowing_grids[0]] == 1:
+            num_shadowing = 0
+            last_shadowing_level = None
+            for l in self.get_levels_of_nonzero_coefficient():
+                if shadows(l, subspace):
+                    num_shadowing += 1
+                    last_shadowing_level = l
+                    if num_shadowing > 1:
+                        break
+            if num_shadowing == 1 and self.get_combination_dictionary()[last_shadowing_level] == 1:
                 subspaces_to_remove.add(subspace)
         # ic(subspaces_to_remove)
         downward_closed_set.difference_update(subspaces_to_remove)
