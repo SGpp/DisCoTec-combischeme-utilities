@@ -382,14 +382,15 @@ def split_scheme_by_level_sum(scheme: CombinationScheme) -> tuple(CombinationSch
     # # for different splits -- the sum of weights is assumed to be 1.,
     # # if system 1's weight is 0.5, we have an even split.
     weight_system_1 = 0.5
-    dim_to_split_at = int(dim/2)
+    dims_system_1 = slice(0, dim, 2)
+    dims_system_2 = slice(1, dim, 2)
     for level in gridsToIterate:
         lower_dims_diff_to_lmax = np.array(
-            lmax[:dim_to_split_at])-np.array(level)[:dim_to_split_at]
+            lmax[dims_system_1])-np.array(level)[dims_system_1]
         norm_lower_dims = - \
             np.linalg.norm(lower_dims_diff_to_lmax, ord=0.99)
         higher_dims_diff_to_lmax = np.array(
-            lmax[dim_to_split_at:])-np.array(level[dim_to_split_at:])
+            lmax[dims_system_2])-np.array(level[dims_system_2])
         norm_higher_dims = - \
             np.linalg.norm(higher_dims_diff_to_lmax, ord=0.99)
 
