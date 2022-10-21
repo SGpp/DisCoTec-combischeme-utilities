@@ -4,7 +4,12 @@ from __future__ import annotations
 import math
 import numpy as np
 import itertools as it
-from icecream import ic
+try:
+    from icecream import ic
+    ic("test ic")
+except:
+    def ic(*args):
+        pass
 from scipy.special import binom
 
 import combischeme_output
