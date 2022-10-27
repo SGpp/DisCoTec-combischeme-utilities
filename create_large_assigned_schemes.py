@@ -2,7 +2,12 @@
 
 import argparse
 import numpy as np
-from icecream import ic
+try:
+    from icecream import ic
+    ic("test ic")
+except:
+    def ic(*args):
+        pass
 import combischeme_output
 import combischeme_utils
 
@@ -62,10 +67,10 @@ if __name__ == "__main__":
     # here goes all the diagnostic output, which takes long and you can abort the script if you're not interested
     ic("diagnostic output")
     # minimum memory requirement of full grids in scheme in bytes
-    ic(combischeme_output.readable_bytes(scheme.get_total_num_points_combi()*8))
+    ic(scheme.get_total_num_points_combi(), combischeme_output.readable_bytes(scheme.get_total_num_points_combi()*8))
     # divided memory requirement
-    ic(combischeme_output.readable_bytes(scheme1.get_total_num_points_combi()*8))
-    ic(combischeme_output.readable_bytes(scheme2.get_total_num_points_combi()*8))
+    ic(scheme1.get_total_num_points_combi(), combischeme_output.readable_bytes(scheme1.get_total_num_points_combi()*8))
+    ic(scheme2.get_total_num_points_combi(), combischeme_output.readable_bytes(scheme2.get_total_num_points_combi()*8))
 
     # ic(scheme.get_total_num_points_combi())
     ic(scheme.get_num_component_grids())
