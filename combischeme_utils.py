@@ -97,9 +97,7 @@ def get_min_level_sum(lmin, lmax) -> int:
 
 
 def get_num_dof_of_full_grid(level_vector, boundary) -> int:
-    for b in boundary:
-        assert (b == 2)
-    return np.prod([2**l + 1 for l in level_vector])
+    return np.prod([2**level_vector[i] - 1 + boundary[i] for i in range(len(level_vector))])
 
 
 def get_num_dof_of_full_grids(level_vectors, boundary) -> int:
@@ -110,9 +108,7 @@ def get_num_dof_of_full_grids(level_vectors, boundary) -> int:
 
 
 def get_num_dof_of_subspace(level_vector, boundary) -> int:
-    for b in boundary:
-        assert (b == 2)
-    return np.prod([2**(l-1) if l > 0 else 2 for l in level_vector])
+    return np.prod([2**(level_vector[i]-1) if level_vector[i] > 0 else boundary[i] for i in range(len(level_vector))])
 
 
 def get_num_dof_of_subspaces(level_vectors: set(tuple), boundary) -> int:
