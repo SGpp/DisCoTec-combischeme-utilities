@@ -314,7 +314,6 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
             self._boundary_points = [2]*len(self._lmax)
         else:
             self._boundary_points = boundary_points
-            raise NotImplementedError("boundary points not implemented yet")
         assert (len(self._lmin) == len(self._lmax))
         for i in range(len(lmax)):
             assert (lmin[i] <= lmax[i])
@@ -344,7 +343,6 @@ class CombinationSchemeFromCombinationDictionary(CombinationScheme):
             self._boundary_points = [2]*len(self._lmax)
         else:
             self._boundary_points = boundary_points
-            raise NotImplementedError("boundary points not implemented yet")
 
 
 class CombinationSchemeFromFile(CombinationSchemeFromCombinationDictionary):
@@ -422,7 +420,7 @@ def split_scheme_by_level_sum(scheme: CombinationScheme) -> tuple(CombinationSch
     dictionary2 = {}
     for level in gridsForSystem2:
         dictionary2[level] = scheme.get_coefficient(level)
-    return (CombinationSchemeFromCombinationDictionary(dictionary1), CombinationSchemeFromCombinationDictionary(dictionary2))
+    return (CombinationSchemeFromCombinationDictionary(dictionary1, boundary_points=scheme.get_boundary_points()), CombinationSchemeFromCombinationDictionary(dictionary2, boundary_points=scheme.get_boundary_points()))
 
 
 def assign_combischeme_to_groups(scheme: CombinationScheme, num_process_groups: int) -> list(dict):
