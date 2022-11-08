@@ -27,7 +27,8 @@ if __name__ == "__main__":
 
     ic(lmin, lmax)
 
-    scheme = combischeme_utils.CombinationSchemeFromMaxLevel(lmax, lmin)
+    scheme = combischeme_utils.CombinationSchemeFromMaxLevel(
+        lmax, lmin, boundary_points=[2]*len(lmin))
 
     combischeme_utils.write_scheme_to_json(
         scheme)
@@ -40,3 +41,8 @@ if __name__ == "__main__":
     ic(scheme.get_num_grids_per_level_sum())
     ic(scheme.get_total_num_points_combi())
     # ic(scheme.get_total_num_points_sparse())
+
+    # compute sg dofs
+    sg_dof_initial = combischeme_utils.get_num_dof_of_subspaces(
+        scheme.get_necessary_sparse_grid_spaces(), scheme.get_boundary_points())
+    ic(sg_dof_initial, combischeme_output.readable_bytes(sg_dof_initial*8))
