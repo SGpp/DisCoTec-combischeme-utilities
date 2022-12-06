@@ -20,6 +20,7 @@ if __name__ == "__main__":
     scheme = combischeme_utils.CombinationSchemeFromFile(filename)
 
     dim = scheme.get_dimensionality()
+    boundary = [2]*dim
     lmax = scheme.get_lmax()
     ic(dim, lmax)
 
@@ -35,16 +36,16 @@ if __name__ == "__main__":
 
     # compute sg dofs before
     sg_dof_initial = combischeme_utils.get_num_dof_of_subspaces(
-        scheme.get_necessary_sparse_grid_spaces(), [2]*scheme.get_dimensionality())
+        scheme.get_necessary_sparse_grid_spaces(), boundary)
     ic(sg_dof_initial, combischeme_output.readable_bytes(sg_dof_initial*8))
 
     # compute sg dofs after
     subspaces1 = scheme1.get_necessary_sparse_grid_spaces()
     subspaces2 = scheme2.get_necessary_sparse_grid_spaces()
     sg_dof1 = combischeme_utils.get_num_dof_of_subspaces(
-        subspaces1, [2]*scheme.get_dimensionality())
+        subspaces1, boundary)
     sg_dof2 = combischeme_utils.get_num_dof_of_subspaces(
-        subspaces2, [2]*scheme.get_dimensionality())
+        subspaces2, boundary)
     ic(sg_dof1, sg_dof2)
     ic(combischeme_output.readable_bytes(sg_dof1*8),
        combischeme_output.readable_bytes(sg_dof2*8))
@@ -52,5 +53,5 @@ if __name__ == "__main__":
     # compute conjoint sg dofs
     conjoint_subspaces = subspaces1.intersection(subspaces2)
     sg_dof_conjoint = combischeme_utils.get_num_dof_of_subspaces(
-        conjoint_subspaces, [2]*scheme.get_dimensionality())
+        conjoint_subspaces, boundary)
     ic(sg_dof_conjoint, combischeme_output.readable_bytes(sg_dof_conjoint*8))
