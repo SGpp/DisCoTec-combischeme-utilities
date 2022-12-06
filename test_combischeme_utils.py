@@ -186,9 +186,11 @@ def test_get_num_dof():
     assert num_sg_dof == 56
 
 
-def test_split_scheme(dim=4):
+def test_split_scheme():
+    dim = 4
     lmin = [1]*dim
     lmax = [6]*dim
+    boundary = [1]*dim
     scheme = combischeme_utils.CombinationSchemeFromMaxLevel(lmax, lmin)
     scheme1, scheme2 = combischeme_utils.split_scheme_by_level_sum(
         scheme)
@@ -205,23 +207,29 @@ def test_split_scheme(dim=4):
     # compute necessary sg dofs before
     sg_spaces_initial = scheme.get_necessary_sparse_grid_spaces()
     ic(combischeme_utils.get_num_dof_of_subspaces(
-        sg_spaces_initial, [2]*scheme.get_dimensionality()))
+        sg_spaces_initial, boundary))
+    num_dof_sg_initial = combischeme_utils.get_num_dof_of_subspaces(
+        sg_spaces_initial, boundary)
+    assert (num_dof_sg_initial == 3072)
 
     # compute necessary sg dofs after
     subspaces1 = scheme1.get_necessary_sparse_grid_spaces()
     num_dof_sg_1 = combischeme_utils.get_num_dof_of_subspaces(
-        subspaces1, [2]*scheme.get_dimensionality())
+        subspaces1, boundary)
     subspaces2 = scheme2.get_necessary_sparse_grid_spaces()
     num_dof_sg_2 = combischeme_utils.get_num_dof_of_subspaces(
-        subspaces2, [2]*scheme.get_dimensionality())
+        subspaces2, boundary)
     ic(num_dof_sg_1, num_dof_sg_2)
+    assert (num_dof_sg_1 == 2048)
+    assert (num_dof_sg_2 == 2048)
     assert subspaces1.union(subspaces2) == sg_spaces_initial
 
     # compute conjoint sg dofs
     conjoint_reduced_subspaces = subspaces1.intersection(subspaces2)
     num_conjoint_reduced_dof = combischeme_utils.get_num_dof_of_subspaces(
-        conjoint_reduced_subspaces, [2]*scheme.get_dimensionality())
+        conjoint_reduced_subspaces, boundary)
     ic(num_conjoint_reduced_dof)
+    assert (num_conjoint_reduced_dof == 1024)
     assert num_conjoint_reduced_dof < num_dof_sg_1
     assert num_conjoint_reduced_dof < num_dof_sg_2
 
