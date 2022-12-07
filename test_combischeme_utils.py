@@ -249,6 +249,13 @@ def test_split_scheme_metis():
     boundary = [1]*dim
     scheme = combischeme_utils.CombinationSchemeFromMaxLevel(lmax, lmin)
 
+    # TODO it would be nicer if this was installed in the CI
+    try:
+        import metis
+    except (ImportError, RuntimeError):
+        print("Skipping test_split_scheme_metis because metis is not installed")
+        return
+
     # use metis split
     schemes_metis = scheme.split_scheme_metis(2)
     assert (len(schemes_metis) == 2)

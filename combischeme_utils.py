@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import networkx as nx
-import metis
 import math
 import numpy as np
 import itertools as it
@@ -356,7 +355,8 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
         return get_downward_closed_set_from_level_vectors(compute_active_set(self._lmin, lmax_reduced))
 
     def split_scheme_metis(self, num_partitions: int = 2) -> list(CombinationScheme):
-
+        # import metis only if required
+        import metis
         main_diagonal = [np.array(l, dtype=int)
                          for l in compute_active_set(self._lmin, self._lmax)]
         G = get_graph_from_active_set(main_diagonal)
