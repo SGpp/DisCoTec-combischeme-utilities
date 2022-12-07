@@ -242,6 +242,43 @@ def test_split_scheme():
     assert conjoint_all_subspaces == conjoint_reduced_subspaces
 
 
+def test_split_scheme_metis():
+    dim = 4
+    lmin = [1]*dim
+    lmax = [6]*dim
+    boundary = [1]*dim
+    scheme = combischeme_utils.CombinationSchemeFromMaxLevel(lmax, lmin)
+
+    # use metis split
+    schemes_metis = scheme.split_scheme_metis(2)
+    assert (len(schemes_metis) == 2)
+    scheme1_metis = schemes_metis[0]
+    scheme2_metis = schemes_metis[1]
+
+    # TODO check that all are assigned
+
+    # compute necessary sg dofs before
+    sg_spaces_initial = scheme.get_necessary_sparse_grid_spaces()
+    ic(combischeme_utils.get_num_dof_of_subspaces(
+        sg_spaces_initial, boundary))
+
+    # compute necessary sg dofs after
+    subspaces1 = scheme1_metis.get_necessary_sparse_grid_spaces()
+    num_dof_sg_1 = combischeme_utils.get_num_dof_of_subspaces(
+        subspaces1, boundary)
+    subspaces2 = scheme2_metis.get_necessary_sparse_grid_spaces()
+    num_dof_sg_2 = combischeme_utils.get_num_dof_of_subspaces(
+        subspaces2, boundary)
+    ic(num_dof_sg_1, num_dof_sg_2)
+    assert subspaces1.union(subspaces2) == sg_spaces_initial
+
+    # check if they are the same number as for level-sum split
+    assert (num_dof_sg_1 == 2048)
+    assert (num_dof_sg_2 == 2048)
+
+    # TODO check conjoint spaces /dofs
+
+
 def test_integration_create_split_assign(dim=4):
     lmin = [1]*dim
     lmax = [6]*dim

@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
 from __future__ import annotations
+
+import networkx as nx
+import metis
 import math
 import numpy as np
 import itertools as it
@@ -150,6 +153,32 @@ def compute_active_set(lmin, lmax):
                 s.add(grid)
 
     return s
+
+
+def get_graph_from_active_set(main_diagonal) -> nx.Graph:
+    """ get a networkx graph representation of the active set
+        where the graph's key labels are strings of level vectors
+    """
+    G = nx.Graph()
+
+    # the maximum possible number of connections is given by the binomial coefficient
+    # (select two possible dimensions, twice for each sign of +-1 to keep the same level sum)
+    max_number_connections = int(2*binom(len(main_diagonal[0]), 2))
+    for level in main_diagonal:
+        # for every level on the main diagonal / in the active set, add a node to the graph
+        G.add_node(str(level), node_size=1)
+        # and add an edge between all nodes where the level vectors differ by 2
+        # only works for "regular" diagonal active sets
+        for level2 in main_diagonal:
+            if any(level != level2) and int(np.linalg.norm(level-level2, ord=1)) == 2:
+                G.add_edge(str(level), str(level2), edge_value=1, capacity=1)
+                # ic("added edge", level, level2)
+        num_connections = len(G.edges(str(level)))
+        assert (num_connections > 0)
+        assert (num_connections <= max_number_connections)
+
+    assert (nx.is_connected(G))
+    return G
 
 
 def compute_regular_combination_dictionary(lmin, levelDifference: int) -> dict:
@@ -325,6 +354,90 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
         lmax_reduced = [max(self._lmax[i]-1, self._lmin[i])
                         for i in range(len(self._lmax))]
         return get_downward_closed_set_from_level_vectors(compute_active_set(self._lmin, lmax_reduced))
+
+    def split_scheme_metis(self, num_partitions: int = 2) -> list(CombinationScheme):
+
+        main_diagonal = [np.array(l, dtype=int)
+                         for l in compute_active_set(self._lmin, self._lmax)]
+        G = get_graph_from_active_set(main_diagonal)
+
+        max_number_connections = int(2*binom(len(main_diagonal[0]), 2))
+        for level in main_diagonal:
+            num_connections = len(G.edges(str(level)))
+            # add costs for nodes at the exterior of the active set
+            # this is where you would also enter a load model possibly
+            G.nodes[str(level)]['node_value'] = 1 + 1 * \
+                (max_number_connections - num_connections)**1
+
+        # cf. https://stackoverflow.com/a/50686793
+        # which node attributes should metis use for partitioning
+        G.graph['node_weight_attr'] = 'node_value'
+        G.graph['node_size_attr'] = 'node_size'
+        G.graph['edge_weight_attr'] = 'edge_value'
+
+        # partitions from METIS
+        (cut, parts) = metis.part_graph(G, num_partitions,
+                                        objtype='cut',
+                                        niter=100000,
+                                        ncuts=10000,
+                                        contig=True,
+                                        iptype='node',
+                                        rtype='sep2sided'
+                                        )
+        assert min(parts) == 0
+        assert max(parts) == num_partitions-1
+        for i, node in enumerate(G.nodes()):
+            G.nodes[node]['parts'] = parts[i]
+
+        # draw graph -- visible in jupyter notebook
+        nx.draw(G, pos=nx.drawing.layout.spring_layout(G),
+                with_labels=True, node_color=parts, vmin=-1)
+
+        # transfer back to the ordering we had in the main diagonal
+        parts = [G.nodes[str(level)]['parts'] for level in main_diagonal]
+
+        partitioned_schemes = [CombinationSchemeFromCombinationDictionary({tuple(main_diagonal[i]): 1 for i in range(
+            len(main_diagonal)) if parts[i] == p}, boundary_points=self.get_boundary_points()) for p in range(num_partitions)]
+
+        # TODO assign lower diagonals
+        return partitioned_schemes
+
+    def split_scheme_level_sum(self, num_partitions: int = 2) -> list(CombinationScheme):
+        assert (num_partitions == 2)
+        main_diagonal = [np.array(l, dtype=int)
+                         for l in compute_active_set(self._lmin, self._lmax)]
+        G = get_graph_from_active_set(main_diagonal)
+
+        dim = len(main_diagonal[0])
+        dims_system_1 = slice(0, dim, num_partitions)
+        dims_system_2 = slice(1, dim, num_partitions)
+        for level in main_diagonal:
+            # assign by level sum
+            lower_dims_diff_to_lmax = np.array(
+                self._lmax[dims_system_1])-np.array(level)[dims_system_1]
+            norm_lower_dims = - \
+                np.linalg.norm(lower_dims_diff_to_lmax, ord=0.99)
+            higher_dims_diff_to_lmax = np.array(
+                self._lmax[dims_system_2])-np.array(level[dims_system_2])
+            norm_higher_dims = - \
+                np.linalg.norm(higher_dims_diff_to_lmax, ord=0.99)
+            if norm_lower_dims > norm_higher_dims:
+                G.nodes[str(level)]['parts'] = 0
+            else:
+                G.nodes[str(level)]['parts'] = 1
+        # draw graph -- visible in jupyter notebook
+        colors = [G.nodes[node]['parts'] for node in list(G.nodes())]
+        nx.draw(G, pos=nx.drawing.layout.spring_layout(G),
+                with_labels=True, node_color=colors, vmin=-1)
+
+        parts = [G.nodes[str(level)]['parts'] for level in main_diagonal]
+        assert min(parts) == 0
+        assert max(parts) == num_partitions-1
+        partitioned_schemes = [CombinationSchemeFromCombinationDictionary({tuple(main_diagonal[i]): 1 for i in range(
+            len(main_diagonal)) if parts[i] == p}, boundary_points=self.get_boundary_points()) for p in range(num_partitions)]
+
+        # TODO assign lower diagonals
+        return partitioned_schemes
 
 
 class CombinationSchemeFromCombinationDictionary(CombinationScheme):
