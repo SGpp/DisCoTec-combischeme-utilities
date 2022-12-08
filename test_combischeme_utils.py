@@ -156,6 +156,7 @@ def test_necessary_sparse_grid_spaces(dim=3):
             corner_neighbor = corner.copy()
             corner_neighbor[d2] += 1
             assert (tuple(corner_neighbor) not in list(necessary_subspaces))
+    assert combischeme_utils.is_downward_closed_set(necessary_subspaces)
 
     num_sg_dof = combischeme_utils.get_num_dof_of_subspaces(
         necessary_subspaces, boundary=[2]*dim)
@@ -168,9 +169,9 @@ def test_necessary_sparse_grid_spaces(dim=3):
     other_scheme = combischeme_utils.CombinationSchemeFromCombinationDictionary(
         scheme.get_combination_dictionary())
     other_subspaces = scheme.get_sparse_grid_spaces()
-    other_necessary_subspaces = other_scheme.get_necessary_sparse_grid_spaces()
     assert other_subspaces == subspaces
-    assert other_necessary_subspaces == necessary_subspaces
+    with pytest.raises(NotImplementedError):
+        other_scheme.get_necessary_sparse_grid_spaces()
 
 
 def test_get_num_dof():
@@ -205,23 +206,31 @@ def test_split_scheme():
         assert found == 1
 
     # compute necessary sg dofs before
-    sg_spaces_initial = scheme.get_necessary_sparse_grid_spaces()
+    sg_spaces_initial = scheme.get_sparse_grid_spaces()
     ic(combischeme_utils.get_num_dof_of_subspaces(
         sg_spaces_initial, boundary))
     num_dof_sg_initial = combischeme_utils.get_num_dof_of_subspaces(
         sg_spaces_initial, boundary)
-    assert (num_dof_sg_initial == 3072)
+    assert (num_dof_sg_initial == 8832)
 
-    # compute necessary sg dofs after
-    subspaces1 = scheme1.get_necessary_sparse_grid_spaces()
+    # compute necessary sg dofs before
+    sg_spaces_initial_reduced = scheme.get_necessary_sparse_grid_spaces()
+    ic(combischeme_utils.get_num_dof_of_subspaces(
+        sg_spaces_initial_reduced, boundary))
+    num_dof_sg_initial_reduced = combischeme_utils.get_num_dof_of_subspaces(
+        sg_spaces_initial_reduced, boundary)
+    assert (num_dof_sg_initial_reduced == 3072)
+
+    # compute sg dofs after
+    subspaces1 = scheme1.get_sparse_grid_spaces()
     num_dof_sg_1 = combischeme_utils.get_num_dof_of_subspaces(
         subspaces1, boundary)
-    subspaces2 = scheme2.get_necessary_sparse_grid_spaces()
+    subspaces2 = scheme2.get_sparse_grid_spaces()
     num_dof_sg_2 = combischeme_utils.get_num_dof_of_subspaces(
         subspaces2, boundary)
     ic(num_dof_sg_1, num_dof_sg_2)
-    assert (num_dof_sg_1 == 2048)
-    assert (num_dof_sg_2 == 2048)
+    assert (num_dof_sg_1 == 4928)
+    assert (num_dof_sg_2 == 4928)
     assert subspaces1.union(subspaces2) == sg_spaces_initial
 
     # compute conjoint sg dofs
@@ -266,24 +275,26 @@ def test_split_scheme_metis():
     assert len(scheme.get_levels_of_nonzero_coefficient()) == sum(
         [len(part_scheme.get_levels_of_nonzero_coefficient()) for part_scheme in schemes_metis])
 
-    # compute necessary sg dofs before
-    sg_spaces_initial = scheme.get_necessary_sparse_grid_spaces()
+    # compute sg dofs before
+    sg_spaces_initial = scheme.get_sparse_grid_spaces()
     ic(combischeme_utils.get_num_dof_of_subspaces(
         sg_spaces_initial, boundary))
 
-    # compute necessary sg dofs after
-    subspaces1 = scheme1_metis.get_necessary_sparse_grid_spaces()
+    # compute sg dofs after
+    assert combischeme_utils.get_union_subspaces(
+        schemes_metis) == scheme.get_sparse_grid_spaces()
+
+    subspaces1 = scheme1_metis.get_sparse_grid_spaces()
     num_dof_sg_1 = combischeme_utils.get_num_dof_of_subspaces(
         subspaces1, boundary)
-    subspaces2 = scheme2_metis.get_necessary_sparse_grid_spaces()
+    subspaces2 = scheme2_metis.get_sparse_grid_spaces()
     num_dof_sg_2 = combischeme_utils.get_num_dof_of_subspaces(
         subspaces2, boundary)
     ic(num_dof_sg_1, num_dof_sg_2)
-    assert subspaces1.union(subspaces2) == sg_spaces_initial
 
     # check if they are the same number as for level-sum split
-    assert (num_dof_sg_1 == 2048)
-    assert (num_dof_sg_2 == 2048)
+    assert (num_dof_sg_1 == 4928)
+    assert (num_dof_sg_2 == 4928)
 
     # check conjoint spaces /dofs
     conjoint_reduced_subspaces = combischeme_utils.get_conjoint_subspaces(

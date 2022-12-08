@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import networkx as nx
-import math
-import numpy as np
+from functools import reduce
 import itertools as it
 try:
     from icecream import ic
@@ -12,6 +10,10 @@ try:
 except:
     def ic(*args):
         pass
+import math
+import networkx as nx
+import numpy as np
+from operator import and_, or_
 from scipy.special import binom
 
 import combischeme_output
@@ -94,6 +96,11 @@ def get_downward_closed_set_from_level_vectors(level_vectors) -> set:
         down_set.update(
             get_downward_closed_set_from_level_vector(level_vector))
     return down_set
+
+
+def is_downward_closed_set(level_vectors) -> bool:
+    down_set = get_downward_closed_set_from_level_vectors(level_vectors)
+    return down_set.symmetric_difference(set(level_vectors)) == set()
 
 
 def get_min_level_sum(lmin, lmax) -> int:
@@ -311,24 +318,8 @@ class CombinationScheme():
         return spaces
 
     def get_necessary_sparse_grid_spaces(self) -> set:
-        downward_closed_set = self.get_sparse_grid_spaces()
-        # remove from downward closed set if there is only one level of coefficient 1 that shadows this subspace
-        subspaces_to_remove = set()
-        for subspace in downward_closed_set:
-            num_shadowing = 0
-            last_shadowing_level = None
-            for l in self.get_levels_of_nonzero_coefficient():
-                if shadows(l, subspace):
-                    num_shadowing += 1
-                    last_shadowing_level = l
-                    if num_shadowing > 1:
-                        break
-            if num_shadowing == 1 and self.get_combination_dictionary()[last_shadowing_level] == 1:
-                subspaces_to_remove.add(subspace)
-        # ic(subspaces_to_remove)
-        downward_closed_set.difference_update(subspaces_to_remove)
-        assert downward_closed_set != set()
-        return downward_closed_set
+        raise NotImplementedError(
+            "get_necessary_sparse_grid_spaces was not correctly implemented for this class")
 
     def add_component(self, level: tuple, coefficient: float) -> None:
         self._combination_dictionary[level] = coefficient
@@ -393,7 +384,8 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
         single_shadowed = [
             level for level in shadow_dict if len(shadow_dict[level]) == 1]
         # the subspaces belonging to single-shadowed grids are interesting because they can be left out of the between-partition communication
-        ic(len(single_shadowed), sum(get_num_dof_of_subspaces(single_shadowed)))
+        ic(len(single_shadowed), get_num_dof_of_subspaces(
+            single_shadowed, self.get_boundary_points()))
         for level in single_shadowed:
             # assign to partition
             partitioned_schemes[shadow_dict[level][0]].add_component(
