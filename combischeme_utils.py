@@ -476,8 +476,16 @@ def write_scheme_to_json(scheme: CombinationScheme, file_name: str = None):
         scheme.get_combination_dictionary(), file_name)
 
 
-def get_common_subspaces(scheme1: CombinationScheme, scheme2: CombinationScheme) -> set:
-    return scheme1.get_sparse_grid_spaces().intersection(scheme2.get_sparse_grid_spaces())
+def get_conjoint_subspaces(schemes: list(CombinationScheme)) -> set:
+    p_subspaces = [scheme.get_sparse_grid_spaces() for scheme in schemes]
+    all_conjoint = set(reduce(and_, p_subspaces))
+    return all_conjoint
+
+
+def get_union_subspaces(schemes: list(CombinationScheme)) -> set:
+    p_subspaces = [scheme.get_sparse_grid_spaces() for scheme in schemes]
+    all_union = set(reduce(or_, p_subspaces))
+    return all_union
 
 
 def split_scheme_by_level_sum(scheme: CombinationScheme) -> tuple(CombinationScheme, CombinationScheme):
