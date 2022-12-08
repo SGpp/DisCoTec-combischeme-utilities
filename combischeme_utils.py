@@ -330,6 +330,9 @@ class CombinationScheme():
         assert downward_closed_set != set()
         return downward_closed_set
 
+    def add_component(self, level: tuple, coefficient: float) -> None:
+        self._combination_dictionary[level] = coefficient
+
 
 class CombinationSchemeFromMaxLevel(CombinationScheme):
     def __init__(self, lmax, lmin=None, boundary_points=None):
@@ -353,6 +356,89 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
         lmax_reduced = [max(self._lmax[i]-1, self._lmin[i])
                         for i in range(len(self._lmax))]
         return get_downward_closed_set_from_level_vectors(compute_active_set(self._lmin, lmax_reduced))
+
+    def assign_remaining_with_little_intersection_but_load_balanced(self, partitioned_schemes: list(CombinationScheme)) -> list(CombinationScheme):
+        levels = self.get_levels_of_nonzero_coefficient()
+        # filter out levels that are already assigned
+        for scheme in partitioned_schemes:
+            # currently I am assuming that only the active front is already assigned
+            assert all([self.get_coefficient(
+                l) == 1 for l in levels if l in scheme.get_levels_of_nonzero_coefficient()])
+            assert all([self.get_coefficient(l) == scheme.get_coefficient(
+                l) for l in levels if l in scheme.get_levels_of_nonzero_coefficient()])
+            levels = [
+                l for l in levels if l not in scheme.get_levels_of_nonzero_coefficient()]
+        assert (len(levels) < len(
+            self.get_levels_of_nonzero_coefficient()))
+
+        # assign lower diagonals
+        # count number of partial schemes that shadow the level
+        shadow_dict = {}
+        for scheme_index, scheme in enumerate(partitioned_schemes):
+            part_levels = scheme.get_levels_of_nonzero_coefficient()
+            part_subspaces = scheme.get_sparse_grid_spaces()
+            assert len(part_levels) > 0
+            assert len(part_subspaces) >= len(part_levels)
+            for level in levels:
+                if level not in shadow_dict:
+                    shadow_dict[level] = []
+                # keep track of which partitions level could be assigned to (at absolutely no added sparse grid cost)
+                if level in part_subspaces:
+                    shadow_dict[level].append(scheme_index)
+
+        # assert that all levels can go somewhere for free
+        assert all([(len(shadow_dict[level]) > 0) for level in shadow_dict])
+        max_num_shadowing = max([len(shadow_dict[level])
+                                for level in shadow_dict])
+        single_shadowed = [
+            level for level in shadow_dict if len(shadow_dict[level]) == 1]
+        # the subspaces belonging to single-shadowed grids are interesting because they can be left out of the between-partition communication
+        ic(len(single_shadowed), sum(get_num_dof_of_subspaces(single_shadowed)))
+        for level in single_shadowed:
+            # assign to partition
+            partitioned_schemes[shadow_dict[level][0]].add_component(
+                level, self.get_coefficient(level))
+            del shadow_dict[level]
+
+        # from here on, it is heuristic
+        # take level sum as proxy for size
+        level_sizes = set([sum(l) for l in shadow_dict])
+        levels_by_size = {size: [l for l in shadow_dict if sum(
+            l) == size] for size in level_sizes}
+        shadow_dict_copy = shadow_dict.copy()
+
+        # start with the largest grids
+        for level_size in sorted(level_sizes, reverse=True):
+            for level in levels_by_size[level_size]:
+                # go from those grids with few options to those with many options
+                for num_shadowing in range(2, max_num_shadowing+1):
+                    if len(shadow_dict_copy[level]) == num_shadowing:
+                        # assign to partition with the lowest current number of DOF
+                        candidates = shadow_dict[level]
+                        candidates.sort(reverse=False, key=lambda i: get_num_dof_of_full_grids(
+                            partitioned_schemes[i].get_levels_of_nonzero_coefficient(), self.get_boundary_points()))
+                        assign_to = candidates[0]
+                        partitioned_schemes[assign_to].add_component(
+                            level, self.get_coefficient(level))
+                        del shadow_dict[level]
+        assert (len(shadow_dict) == 0)
+
+        num_dof_per_partition = [get_num_dof_of_full_grids(scheme.get_levels_of_nonzero_coefficient(
+        ), self.get_boundary_points()) for scheme in partitioned_schemes]
+        num_grids_per_partition = [
+            len(scheme.get_levels_of_nonzero_coefficient()) for scheme in partitioned_schemes]
+        ic(min(num_dof_per_partition), max(num_dof_per_partition))
+        ic(min(num_grids_per_partition), max(num_grids_per_partition))
+
+        # TODO add CombinationSchemeFromCombinationSchemes and check if they are the same as self
+        # for now, just make sure that all levels are assigned
+        test_levels = self.get_levels_of_nonzero_coefficient()
+        for scheme in partitioned_schemes:
+            test_levels = [
+                l for l in test_levels if l not in scheme.get_levels_of_nonzero_coefficient()]
+        assert (len(test_levels) == 0)
+
+        return partitioned_schemes
 
     def split_scheme_metis(self, num_partitions: int = 2) -> list(CombinationScheme):
         # import metis only if required
@@ -399,7 +485,9 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
         partitioned_schemes = [CombinationSchemeFromCombinationDictionary({tuple(main_diagonal[i]): 1 for i in range(
             len(main_diagonal)) if parts[i] == p}, boundary_points=self.get_boundary_points()) for p in range(num_partitions)]
 
-        # TODO assign lower diagonals
+        partitioned_schemes = self.assign_remaining_with_little_intersection_but_load_balanced(
+            partitioned_schemes)
+
         return partitioned_schemes
 
     def split_scheme_level_sum(self, num_partitions: int = 2) -> list(CombinationScheme):
@@ -436,7 +524,9 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
         partitioned_schemes = [CombinationSchemeFromCombinationDictionary({tuple(main_diagonal[i]): 1 for i in range(
             len(main_diagonal)) if parts[i] == p}, boundary_points=self.get_boundary_points()) for p in range(num_partitions)]
 
-        # TODO assign lower diagonals
+        partitioned_schemes = self.assign_remaining_with_little_intersection_but_load_balanced(
+            partitioned_schemes)
+
         return partitioned_schemes
 
 

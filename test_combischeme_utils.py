@@ -263,6 +263,8 @@ def test_split_scheme_metis():
     scheme2_metis = schemes_metis[1]
 
     # TODO check that all are assigned
+    assert len(scheme.get_levels_of_nonzero_coefficient()) == sum(
+        [len(part_scheme.get_levels_of_nonzero_coefficient()) for part_scheme in schemes_metis])
 
     # compute necessary sg dofs before
     sg_spaces_initial = scheme.get_necessary_sparse_grid_spaces()
@@ -283,7 +285,12 @@ def test_split_scheme_metis():
     assert (num_dof_sg_1 == 2048)
     assert (num_dof_sg_2 == 2048)
 
-    # TODO check conjoint spaces /dofs
+    # check conjoint spaces /dofs
+    conjoint_reduced_subspaces = combischeme_utils.get_conjoint_subspaces(
+        schemes_metis)
+    num_conjoint_reduced_dof = combischeme_utils.get_num_dof_of_subspaces(
+        conjoint_reduced_subspaces, boundary)
+    assert (num_conjoint_reduced_dof == 1024)
 
 
 def test_integration_create_split_assign(dim=4):
