@@ -432,7 +432,16 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
 
         return partitioned_schemes
 
-    def split_scheme_metis(self, num_partitions: int = 2, **metis_kwargs) -> list(CombinationScheme):
+    def split_scheme_metis(self, num_partitions: int = 2,
+                           objtype='cut',
+                           ctype='rm',
+                           iptype='grow',
+                           rtype='fm',
+                           ncuts=100,
+                           niter=1000,
+                           ufactor=100,
+                           minconn=True,
+                           **metis_kwargs) -> list(CombinationScheme):
         # import metis only if required
         import metis
         main_diagonal = [np.array(l, dtype=int)
@@ -454,7 +463,17 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
         G.graph['edge_weight_attr'] = 'edge_value'
 
         # partitions from METIS
-        (cut, parts) = metis.part_graph(G, num_partitions, contig=True, **metis_kwargs
+        (cut, parts) = metis.part_graph(G, num_partitions,
+                                        contig=True,
+                                        objtype=objtype,
+                                        ctype=ctype,
+                                        iptype=iptype,
+                                        rtype=rtype,
+                                        ncuts=ncuts,
+                                        niter=niter,
+                                        ufactor=ufactor,
+                                        minconn=minconn,
+                                        ** metis_kwargs
                                         )
         assert min(parts) == 0
         assert max(parts) == num_partitions-1
