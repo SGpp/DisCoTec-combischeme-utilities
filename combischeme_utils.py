@@ -348,6 +348,7 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
         self._combination_dictionary = compute_combination_dictionary(
             lmin, lmax)
         assert (self._combination_dictionary is not None)
+        self._graph = None
 
     def get_necessary_sparse_grid_spaces(self) -> set:
         lmax_reduced = [max(self._lmax[i]-1, self._lmin[i])
@@ -438,6 +439,14 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
 
         return partitioned_schemes
 
+    def get_graph(self) -> nx.Graph:
+        main_diagonal = [np.array(l, dtype=int)
+                        for l in compute_active_set(self._lmin, self._lmax)]
+        if self._graph is None:
+            self._graph = get_graph_from_active_set(
+                main_diagonal)
+        return self._graph, main_diagonal
+
     def split_scheme_metis(self, num_partitions: int = 2,
                            objtype='cut',
                            ctype='rm',
@@ -450,9 +459,8 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
                            **metis_kwargs) -> list(CombinationScheme):
         # import metis only if required
         import metis
-        main_diagonal = [np.array(l, dtype=int)
-                         for l in compute_active_set(self._lmin, self._lmax)]
-        G = get_graph_from_active_set(main_diagonal)
+
+        G, main_diagonal = self.get_graph()
 
         max_number_connections = int(2*binom(len(main_diagonal[0]), 2))
         for level in main_diagonal:
