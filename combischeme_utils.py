@@ -170,13 +170,19 @@ def get_graph_from_active_set(main_diagonal) -> nx.Graph:
     # the maximum possible number of connections is given by the binomial coefficient
     # (select two possible dimensions, twice for each sign of +-1 to keep the same level sum)
     max_number_connections = int(2*binom(len(main_diagonal[0]), 2))
+    main_diagonal_list_of_lists = [list(level) for level in main_diagonal]
     for level in main_diagonal:
         # for every level on the main diagonal / in the active set, add a node to the graph
         G.add_node(str(level), node_size=1)
         # and add an edge between all nodes where the level vectors differ by 2
         # only works for "regular" diagonal active sets
-        for level2 in main_diagonal:
-            if any(level != level2) and int(np.linalg.norm(level-level2, ord=1)) == 2:
+        offset = np.array([0]*len(level), dtype=int)
+        offset[0] = 1
+        offset[1] = -1
+        for permutation in it.permutations(offset):
+            level2 = level+permutation
+            assert int(np.linalg.norm(level-level2, ord=1)) == 2
+            if level2.tolist() in main_diagonal_list_of_lists:
                 G.add_edge(str(level), str(level2), edge_value=1, capacity=1)
                 # ic("added edge", level, level2)
         num_connections = len(G.edges(str(level)))
