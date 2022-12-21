@@ -440,16 +440,16 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
         return partitioned_schemes
 
     def get_graph(self) -> nx.Graph:
-        main_diagonal = [np.array(l, dtype=int)
-                        for l in compute_active_set(self._lmin, self._lmax)]
         if self._graph is None:
+            self._main_diagonal = [np.array(l, dtype=int)
+                                   for l in compute_active_set(self._lmin, self._lmax)]
             self._graph = get_graph_from_active_set(
-                main_diagonal)
-        return self._graph, main_diagonal
+                self._main_diagonal)
+        return self._graph, self._main_diagonal
 
     def split_scheme_metis(self, num_partitions: int = 2,
-                           objtype='cut',
-                           ctype='rm',
+                           objtype='vol',
+                           ctype='shem',
                            iptype='grow',
                            rtype='fm',
                            ncuts=100,
