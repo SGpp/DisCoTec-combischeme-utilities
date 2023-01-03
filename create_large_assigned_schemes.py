@@ -40,8 +40,9 @@ if __name__ == "__main__":
 
     ic(lmin, lmax)
 
+    boundary = [1]*len(lmin)
     scheme = combischeme_utils.CombinationSchemeFromMaxLevel(
-        lmax, lmin, boundary_points=[2]*len(lmin))
+        lmax, lmin, boundary_points=boundary)
 
     dim = scheme.get_dimensionality()
     lmax = scheme.get_lmax()
