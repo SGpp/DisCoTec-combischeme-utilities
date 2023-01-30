@@ -28,7 +28,7 @@ if __name__ == "__main__":
     ic(lmin, lmax)
 
     scheme = combischeme_utils.CombinationSchemeFromMaxLevel(
-        lmax, lmin, boundary_points=[2]*len(lmin))
+        lmax, lmin, boundary_points=[1]*len(lmin))
 
     combischeme_utils.write_scheme_to_json(
         scheme)

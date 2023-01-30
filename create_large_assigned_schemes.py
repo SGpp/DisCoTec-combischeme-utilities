@@ -87,8 +87,8 @@ if __name__ == "__main__":
     ic(sg_dof_initial, combischeme_output.readable_bytes(sg_dof_initial*8))
 
     # compute sg dofs after
-    subspaces1 = scheme1.get_necessary_sparse_grid_spaces()
-    subspaces2 = scheme2.get_necessary_sparse_grid_spaces()
+    subspaces1 = scheme1.get_sparse_grid_spaces()
+    subspaces2 = scheme2.get_sparse_grid_spaces()
     sg_dof1 = combischeme_utils.get_num_dof_of_subspaces(
         subspaces1, scheme1.get_boundary_points())
     sg_dof2 = combischeme_utils.get_num_dof_of_subspaces(
