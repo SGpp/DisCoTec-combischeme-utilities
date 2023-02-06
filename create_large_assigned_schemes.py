@@ -102,3 +102,19 @@ if __name__ == "__main__":
     sg_dof_conjoint = combischeme_utils.get_num_dof_of_subspaces(
         conjoint_subspaces, scheme.get_boundary_points())
     ic(sg_dof_conjoint, combischeme_output.readable_bytes(sg_dof_conjoint*8))
+
+    # output parallelization info
+    max_process_group_size = 2**sum(lmin)
+    sg_memory_per_process = max(sg_dof1, sg_dof2) / \
+        max_process_group_size * 8 / 1e9
+    extra_sg_memory_per_process = sg_dof_conjoint / max_process_group_size * 8 / 1e9
+    available_memory_per_process = 2.
+    memory_left_per_process = available_memory_per_process - \
+        sg_memory_per_process - extra_sg_memory_per_process
+    fg_memory_to_distribute = scheme.get_total_num_points_combi() / \
+        max_process_group_size * 8 / 1e9
+    print("if running on the (maximum) process group size of " + str(max_process_group_size) +
+          ", this scenario will use " + str(sg_memory_per_process) +
+          " GB per process for the sparse grid data; and " + str(extra_sg_memory_per_process) +
+          " for the extra sparse grid data. Under optimal conditions, one would need " + str(fg_memory_to_distribute/memory_left_per_process) +
+          " if " + str(available_memory_per_process) + " GB main memory would be available per core.")
