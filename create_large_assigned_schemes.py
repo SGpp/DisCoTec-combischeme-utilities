@@ -116,5 +116,6 @@ if __name__ == "__main__":
     print("if running on the (maximum) process group size of " + str(max_process_group_size) +
           ", this scenario will use " + str(sg_memory_per_process) +
           " GB per process for the sparse grid data; and " + str(extra_sg_memory_per_process) +
-          " for the extra sparse grid data. Under optimal conditions, one would need " + str(fg_memory_to_distribute/memory_left_per_process) +
-          " if " + str(available_memory_per_process) + " GB main memory would be available per core.")
+          " for the extra sparse grid data. Under optimal conditions, one would need " +
+          str(fg_memory_to_distribute/memory_left_per_process) + " process groups if " +
+          str(available_memory_per_process) + " GB main memory would be available per core.")
