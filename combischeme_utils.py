@@ -487,9 +487,13 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
                                         niter=niter,
                                         ufactor=ufactor,
                                         minconn=minconn,
+                                        seed=1111,
                                         ** metis_kwargs
                                         )
+        # make sure we get all the partitions we asked for
         assert min(parts) == 0
+        for i in range(num_partitions):
+            assert i in parts
         assert max(parts) == num_partitions-1
         for i, node in enumerate(G.nodes()):
             G.nodes[node]['parts'] = parts[i]
