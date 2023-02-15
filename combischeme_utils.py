@@ -657,6 +657,36 @@ def split_scheme_by_level_sum(scheme: CombinationScheme) -> tuple(CombinationSch
     return (CombinationSchemeFromCombinationDictionary(dictionary1, boundary_points=scheme.get_boundary_points()), CombinationSchemeFromCombinationDictionary(dictionary2, boundary_points=scheme.get_boundary_points()))
 
 
+def split_scheme_by_single_dimension(scheme: CombinationScheme, from_this_level_and_above, dimension_to_split_at=-1) -> tuple(CombinationScheme, CombinationScheme):
+    """splits a combination scheme into two: input is assumed to be valid regular combination scheme"""
+    gridsForSystems = list(scheme.get_levels_of_nonzero_coefficient())
+    gridsForSystem1 = []
+    gridsForSystem2 = []
+    ic(len(gridsForSystem1), len(gridsForSystem2), len(gridsForSystems))
+
+    gridsToIterate = gridsForSystems.copy()
+    for level in gridsToIterate:
+        if level[dimension_to_split_at] >= from_this_level_and_above:
+            gridsForSystems.remove(level)
+            gridsForSystem1.append(level)
+            continue
+        else:
+            gridsForSystems.remove(level)
+            gridsForSystem2.append(level)
+
+    assert (len(gridsForSystems) == 0)
+    ic(len(gridsForSystem1), len(gridsForSystem2), len(gridsForSystems))
+
+    # build the new combination dictionaries
+    dictionary1 = {}
+    for level in gridsForSystem1:
+        dictionary1[level] = scheme.get_coefficient(level)
+    dictionary2 = {}
+    for level in gridsForSystem2:
+        dictionary2[level] = scheme.get_coefficient(level)
+    return (CombinationSchemeFromCombinationDictionary(dictionary1, boundary_points=scheme.get_boundary_points()), CombinationSchemeFromCombinationDictionary(dictionary2, boundary_points=scheme.get_boundary_points()))
+
+
 def assign_combischeme_to_groups(scheme: CombinationScheme, num_process_groups: int) -> list(dict):
     dim = scheme.get_dimensionality()
     total_num_points_combi = scheme.get_total_num_points_combi()
