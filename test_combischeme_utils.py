@@ -413,4 +413,4 @@ def test_integration_create_split_assign(dim=4):
     assert (len(assignment1read) == num_process_groups1)
     assert (len(assignment2read) == num_process_groups2)
     assert np.max(assigned_FG_size_read1) > np.min(assigned_FG_size_read1)*2
-    assert np.max(assigned_FG_size_read1) < np.min(assigned_FG_size_read2)
+    assert np.max(assigned_FG_size_read2) > np.min(assigned_FG_size_read2)*2
