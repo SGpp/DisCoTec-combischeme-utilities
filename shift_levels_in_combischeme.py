@@ -39,16 +39,17 @@ if __name__ == "__main__":
 
     # change every key in combination dictionary by level
     combidictBefore = scheme.get_combination_dictionary()
-    ic(combidictBefore)
     combidictAfter = {}
     for key in combidictBefore:
         combidictAfter[tuple([l + level[i]
                              for i, l in enumerate(key)])] = combidictBefore[key]
 
-    ic(combidictAfter)
     schemeAfter = combischeme_utils.CombinationSchemeFromCombinationDictionary(
         combidictAfter, boundary_points=scheme.get_boundary_points())
-    assert (schemeAfter.get_total_num_points_combi() ==
+    totalNumPointsCombiAfter = schemeAfter.get_total_num_points_combi()
+    ic(totalNumPointsCombiAfter, totalNumPointsCombiAfter/1e13,
+       combischeme_output.readable_bytes(totalNumPointsCombiAfter*8))
+    assert (totalNumPointsCombiAfter ==
             totalNumPointsCombiBefore * 2**(sum(level)))
     lmaxAfter = schemeAfter.get_lmax()
     ic(lmaxAfter)
