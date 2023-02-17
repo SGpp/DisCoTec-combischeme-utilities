@@ -50,4 +50,4 @@ if __name__ == "__main__":
         assert (a*2*8/1e9/(5**6) < 1.)
 
     combischeme_output.write_assignment_to_json(
-        assignment, filename[:-5]+"_"+str(num_process_groups)+"groups.json")
+        assignment, filename[:-5]+"_"+format(num_process_groups, '05d')+"groups.json")

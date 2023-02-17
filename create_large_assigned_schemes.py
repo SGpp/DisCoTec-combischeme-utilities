@@ -46,7 +46,7 @@ if __name__ == "__main__":
     assignment, _ = combischeme_utils.assign_combischeme_to_groups(
         scheme, sum(num_process_groups))
     combischeme_output.write_assignment_to_json(
-        assignment, "scheme_large_" + '-'.join([str(l) for l in lmax]) + "_nosplit_"+str(sum(num_process_groups))+"groups.json")
+        assignment, "scheme_large_" + '-'.join([str(l) for l in lmax]) + "_nosplit_"+format(sum(num_process_groups), '05d')+"groups.json")
 
     dim = scheme.get_dimensionality()
     lmax = scheme.get_lmax()
@@ -68,9 +68,9 @@ if __name__ == "__main__":
         scheme2, num_process_groups[1])
 
     combischeme_output.write_assignment_to_json(
-        assignment1, "scheme_large_" + '-'.join([str(l) for l in lmax]) + "_split1_"+str(num_process_groups[0])+"groups.json")
+        assignment1, "scheme_large_" + '-'.join([str(l) for l in lmax]) + "_split1_"+format(num_process_groups[0], '05d')+"groups.json")
     combischeme_output.write_assignment_to_json(
-        assignment2, "scheme_large_" + '-'.join([str(l) for l in lmax]) + "_split2_"+str(num_process_groups[1])+"groups.json")
+        assignment2, "scheme_large_" + '-'.join([str(l) for l in lmax]) + "_split2_"+format(num_process_groups[1], '05d')+"groups.json")
 
     # here goes all the diagnostic output, which takes long and you can abort the script if you're not interested
     ic("diagnostic output")
