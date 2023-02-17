@@ -20,10 +20,18 @@ if __name__ == "__main__":
         type=int,
         default=[4, 5, 6],
     )
+    parser.add_argument(
+        "--target_partition_weights",
+        nargs="*",
+        type=float,
+        default=None,
+    )
 
     args = parser.parse_args()
     lmin = args.lmin
     lmax = args.lmax
+    target_partition_weights = args.target_partition_weights
+    ic(lmin, lmax, target_partition_weights)
 
     num_partitions = 2
 
@@ -38,10 +46,16 @@ if __name__ == "__main__":
     sg_dof_initial = combischeme_utils.get_num_dof_of_subspaces(
         scheme.get_sparse_grid_spaces(), boundary)
     ic(sg_dof_initial, combischeme_output.readable_bytes(sg_dof_initial*8))
+    combischeme_utils.write_scheme_to_json(
+        scheme, "scheme_large_" + '-'.join([str(l) for l in lmax]) + "_full_.json")
 
-    target_partition_weights = [1./num_partitions]*num_partitions
+    if target_partition_weights is None:
+        target_partition_weights = [1./num_partitions]*num_partitions
+    assert (len(target_partition_weights) == num_partitions)
+    assert (sum(target_partition_weights) == 1.)
+
     partition_schemes = scheme.split_scheme_metis(
-        num_partitions, tpwgts=target_partition_weights)
+        num_partitions, ufactor=10, tpwgts=target_partition_weights)
     assert (len(partition_schemes) == num_partitions)
 
     for i in range(num_partitions):
