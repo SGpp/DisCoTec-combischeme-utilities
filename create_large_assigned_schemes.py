@@ -43,6 +43,10 @@ if __name__ == "__main__":
     boundary = [1]*len(lmin)
     scheme = combischeme_utils.CombinationSchemeFromMaxLevel(
         lmax, lmin, boundary_points=boundary)
+    assignment, _ = combischeme_utils.assign_combischeme_to_groups(
+        scheme, sum(num_process_groups))
+    combischeme_output.write_assignment_to_json(
+        assignment, "scheme_large_" + '-'.join([str(l) for l in lmax]) + "_nosplit_"+str(sum(num_process_groups))+"groups.json")
 
     dim = scheme.get_dimensionality()
     lmax = scheme.get_lmax()
@@ -55,6 +59,8 @@ if __name__ == "__main__":
     scheme1, scheme2 = combischeme_utils.split_scheme_by_level_sum(
         scheme)
 
+    # todo use conjoint sparse grid size as offset-argument for assign()
+    # because the conjoint sparse grid is additional memory only needed on the first process group
     assignment1, assigned_FG_size1 = combischeme_utils.assign_combischeme_to_groups(
         scheme1, num_process_groups[0])
 

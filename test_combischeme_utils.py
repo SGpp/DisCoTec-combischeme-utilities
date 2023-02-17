@@ -386,8 +386,31 @@ def test_integration_create_split_assign(dim=4):
     assert np.max(assigned_FG_size1) < np.min(assigned_FG_size1)*1.2
     assert np.max(assigned_FG_size1) < np.min(assigned_FG_size2)
 
+    filename1 = "scheme_test_split_1_" + \
+        format(num_process_groups1, '05d')+"groups.json"
+    filename2 = "scheme_test_split_2_" + \
+        format(num_process_groups2, '05d')+"groups.json"
     combischeme_output.write_assignment_to_json(
-        assignment1, "scheme_test_split_1_"+str(num_process_groups1)+"groups.json")
+        assignment1, filename1)
+    combischeme_output.write_assignment_to_json(
+        assignment2, filename2)
 
-    combischeme_output.write_assignment_to_json(
-        assignment2, "scheme_test_split_2_"+str(num_process_groups2)+"groups.json")
+    scheme1read = combischeme_utils.CombinationSchemeFromFile(filename1)
+    scheme2read = combischeme_utils.CombinationSchemeFromFile(filename2)
+    assignment1read, assigned_FG_size_read1 = combischeme_utils.assign_combischeme_to_groups(
+        scheme1read, num_process_groups1)
+    assignment2read, assigned_FG_size_read2 = combischeme_utils.assign_combischeme_to_groups(
+        scheme2read, num_process_groups2)
+    assert (assigned_FG_size1 == assigned_FG_size_read1)
+    assert (assigned_FG_size2 == assigned_FG_size_read2)
+    # now with offset for first group
+    assignment1read, assigned_FG_size_read1 = combischeme_utils.assign_combischeme_to_groups(
+        scheme1read, num_process_groups1, 2000)
+    assignment2read, assigned_FG_size_read2 = combischeme_utils.assign_combischeme_to_groups(
+        scheme2read, num_process_groups2, 3000)
+    assert (sum(assigned_FG_size1) == sum(assigned_FG_size_read1))
+    assert (sum(assigned_FG_size2) == sum(assigned_FG_size_read2))
+    assert (len(assignment1read) == num_process_groups1)
+    assert (len(assignment2read) == num_process_groups2)
+    assert np.max(assigned_FG_size_read1) > np.min(assigned_FG_size_read1)*2
+    assert np.max(assigned_FG_size_read1) < np.min(assigned_FG_size_read2)

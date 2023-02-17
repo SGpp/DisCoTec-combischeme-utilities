@@ -16,15 +16,22 @@ if __name__ == "__main__":
     parser.add_argument(
         "--num_groups",
         type=int,
-        default="64",
+        default=64,
+    )
+    parser.add_argument(
+        "--first_group_offset",
+        type=int,
+        default=0,
     )
 
     args = parser.parse_args()
     filename = args.file_name
     num_process_groups = args.num_groups
+    first_group_offset = args.first_group_offset
     ic(filename, num_process_groups)
 
-    scheme = combischeme_utils.CombinationSchemeFromFile(filename)
+    scheme = combischeme_utils.CombinationSchemeFromFile(
+        filename, boundary_points=1)
 
     dim = scheme.get_dimensionality()
     lmax = scheme.get_lmax()
@@ -37,7 +44,7 @@ if __name__ == "__main__":
        combischeme_output.readable_bytes(totalNumPointsCombi*8))
 
     assignment, assigned_FG_size = combischeme_utils.assign_combischeme_to_groups(
-        scheme, num_process_groups)
+        scheme, num_process_groups, first_group_offset)
 
     for a in assigned_FG_size:
         assert (a*2*8/1e9/(5**6) < 1.)

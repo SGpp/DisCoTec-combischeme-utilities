@@ -575,6 +575,10 @@ class CombinationSchemeFromFile(CombinationSchemeFromCombinationDictionary):
     def __init__(self, filename: str, boundary_points=None):
         dictionary = get_combination_dictionary_from_file(
             filename)
+        # if boundary_points is a scalar, assume it is the same for all dimensions
+        if isinstance(boundary_points, int):
+            boundary_points = [boundary_points] * \
+                len(next(iter(dictionary.keys())))
         super().__init__(dictionary, boundary_points)
 
 
@@ -687,7 +691,7 @@ def split_scheme_by_single_dimension(scheme: CombinationScheme, from_this_level_
     return (CombinationSchemeFromCombinationDictionary(dictionary1, boundary_points=scheme.get_boundary_points()), CombinationSchemeFromCombinationDictionary(dictionary2, boundary_points=scheme.get_boundary_points()))
 
 
-def assign_combischeme_to_groups(scheme: CombinationScheme, num_process_groups: int) -> list(dict):
+def assign_combischeme_to_groups(scheme: CombinationScheme, num_process_groups: int, num_dof_buffer_for_first_group=0) -> list(dict):
     dim = scheme.get_dimensionality()
     total_num_points_combi = scheme.get_total_num_points_combi()
 
@@ -699,9 +703,10 @@ def assign_combischeme_to_groups(scheme: CombinationScheme, num_process_groups: 
     assignment = []
     for i in range(num_process_groups):
         assignment.append({})
-    assigned_FG_size = [0.]*num_process_groups
-    # ic(assignment,assigned_FG_size)
-    nextIndex = 0
+    assigned_FG_size = [0]*num_process_groups
+    assigned_FG_size[0] = num_dof_buffer_for_first_group
+
+    nextIndex = num_process_groups-1
     for level in levels:
         assignment[nextIndex][level] = scheme.get_coefficient(level)
         assigned_FG_size[nextIndex] += get_num_dof_of_full_grid(
@@ -709,8 +714,9 @@ def assign_combischeme_to_groups(scheme: CombinationScheme, num_process_groups: 
         # this is where load balancing happens!
         nextIndex = np.argmin(assigned_FG_size)
 
-    ic(assigned_FG_size)
-    ic([len(a) for a in assignment])
+    assigned_FG_size[0] -= num_dof_buffer_for_first_group
+    ic(assigned_FG_size[0], max(assigned_FG_size), min(assigned_FG_size))
+    ic(max([len(a) for a in assignment]), min([len(a) for a in assignment]))
     assert (sum(assigned_FG_size) == total_num_points_combi)
     assert (sum([len(a) for a in assignment]) == len(levels))
     return assignment, assigned_FG_size
