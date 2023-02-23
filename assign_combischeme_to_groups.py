@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 
 import argparse
-from icecream import ic
+try:
+    from icecream import ic
+    ic("test ic")
+except:
+    def ic(*args):
+        pass
 import combischeme_utils
 import combischeme_output
 
