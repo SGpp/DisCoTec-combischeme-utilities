@@ -46,7 +46,7 @@ if __name__ == "__main__":
     assignment, _ = combischeme_utils.assign_combischeme_to_groups(
         scheme, sum(num_process_groups))
     combischeme_output.write_assignment_to_json(
-        assignment, "scheme_large_" + '-'.join([str(l) for l in lmax]) + "_nosplit_"+format(sum(num_process_groups), '05d')+"groups.json")
+        assignment, "scheme_large_" + '-'.join([str(l) for l in lmax]) + "_nosplt_"+format(sum(num_process_groups), '05d')+"groups.json")
 
     dim = scheme.get_dimensionality()
     lmax = scheme.get_lmax()
