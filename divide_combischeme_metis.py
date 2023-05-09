@@ -2,6 +2,7 @@
 
 import argparse
 import numpy as np
+from math import isclose
 from icecream import ic
 import combischeme_output
 import combischeme_utils
@@ -26,14 +27,19 @@ if __name__ == "__main__":
         type=float,
         default=None,
     )
+    parser.add_argument(
+        "--num_partitions",
+        type=int,
+        default=2,
+    )
+
 
     args = parser.parse_args()
     lmin = args.lmin
     lmax = args.lmax
+    num_partitions = args.num_partitions
     target_partition_weights = args.target_partition_weights
-    ic(lmin, lmax, target_partition_weights)
-
-    num_partitions = 2
+    ic(lmin, lmax, num_partitions)
 
     scheme = combischeme_utils.CombinationSchemeFromMaxLevel(
         lmax, lmin, boundary_points=[1]*len(lmin))
@@ -51,8 +57,9 @@ if __name__ == "__main__":
 
     if target_partition_weights is None:
         target_partition_weights = [1./num_partitions]*num_partitions
+    ic(target_partition_weights)
     assert (len(target_partition_weights) == num_partitions)
-    assert (sum(target_partition_weights) == 1.)
+    assert (isclose(sum(target_partition_weights), 1.))
 
     partition_schemes = scheme.split_scheme_metis(
         num_partitions, ufactor=10, tpwgts=target_partition_weights)
