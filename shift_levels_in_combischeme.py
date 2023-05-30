@@ -39,6 +39,29 @@ if __name__ == "__main__":
 
     # change every key in combination dictionary by level
     combidictBefore = scheme.get_combination_dictionary()
+    data = combischeme_output.read_data_from_json(filename)
+    levels = []
+    coeffs = []
+    groupNos = []
+    try:
+        for grid in data:
+            levels.append(tuple(grid['level']))
+            coeffs.append(grid['coeff'])
+            groupNos.append(grid['group_no'])
+        assert (len(levels) == len(coeffs) == len(groupNos))
+        assignmentBefore = [{}.copy() for _ in range(max(groupNos) + 1)]
+        for i in range(len(levels)):
+            assignmentBefore[groupNos[i]][levels[i]] = coeffs[i]
+        assignmentAfter = [{}.copy() for _ in range(max(groupNos) + 1)]
+        for groupNo in range(len(assignmentBefore)):
+            for key in assignmentBefore[groupNo]:
+                assignmentAfter[groupNo][tuple([l + level[i]
+                                                for i, l in enumerate(key)])] = combidictBefore[key]
+        ic(len(levels), max([len(a) for a in assignmentAfter]), min(
+            [len(a) for a in assignmentAfter]))
+    except KeyError as k:
+        print("no group assignments?")
+
     combidictAfter = {}
     for key in combidictBefore:
         combidictAfter[tuple([l + level[i]
@@ -55,5 +78,9 @@ if __name__ == "__main__":
     ic(lmaxAfter)
     assert (all(lmaxAfter == [l + level[i] for i, l in enumerate(lmaxBefore)]))
 
-    combischeme_utils.write_scheme_to_json(
-        schemeAfter, "scheme_large_" + '-'.join([str(l) for l in lmaxAfter]) + ".json")
+    if len(groupNos) > 0:
+        combischeme_output.write_assignment_to_json(assignmentAfter, "scheme_large_" + '-'.join(
+            [str(l) for l in lmaxAfter]) + "_" + format(len(assignmentAfter), '05d') + "groups.json")
+    else:
+        combischeme_utils.write_scheme_to_json(
+            schemeAfter, "scheme_large_" + '-'.join([str(l) for l in lmaxAfter]) + ".json")
