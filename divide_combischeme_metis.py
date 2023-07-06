@@ -22,6 +22,11 @@ if __name__ == "__main__":
         default=[4, 5, 6],
     )
     parser.add_argument(
+        "--scheme_file",
+        nargs=1,
+        type=str,
+    )
+    parser.add_argument(
         "--target_partition_weights",
         nargs="*",
         type=float,
@@ -33,16 +38,21 @@ if __name__ == "__main__":
         default=2,
     )
 
-
     args = parser.parse_args()
-    lmin = args.lmin
-    lmax = args.lmax
     num_partitions = args.num_partitions
     target_partition_weights = args.target_partition_weights
+    # allow either lmin and lmax or scheme_file
+    if args.scheme_file is None:
+        lmin = args.lmin
+        lmax = args.lmax
+        scheme = combischeme_utils.CombinationSchemeFromMaxLevel(
+            lmax, lmin, boundary_points=[1]*len(lmin))
+    else:
+        scheme = combischeme_utils.CombinationSchemeFromFile(
+            args.scheme_file[0], boundary_points=1)
+        lmin = scheme.get_lmin()
+        lmax = scheme.get_lmax()
     ic(lmin, lmax, num_partitions)
-
-    scheme = combischeme_utils.CombinationSchemeFromMaxLevel(
-        lmax, lmin, boundary_points=[1]*len(lmin))
     boundary = scheme.get_boundary_points()
 
     # compute minimum memory requirement of full grids in scheme in bytes
@@ -57,7 +67,8 @@ if __name__ == "__main__":
 
     if target_partition_weights is None:
         target_partition_weights = [1./num_partitions]*num_partitions
-    ic(target_partition_weights)
+    else:
+        ic(target_partition_weights)
     assert (len(target_partition_weights) == num_partitions)
     assert (isclose(sum(target_partition_weights), 1.))
 
