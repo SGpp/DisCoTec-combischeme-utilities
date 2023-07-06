@@ -330,31 +330,6 @@ class CombinationScheme():
     def add_component(self, level: tuple, coefficient: float) -> None:
         self._combination_dictionary[level] = coefficient
 
-
-class CombinationSchemeFromMaxLevel(CombinationScheme):
-    def __init__(self, lmax, lmin=None, boundary_points=None):
-        self._lmax = lmax
-        if lmin is None:
-            self._lmin = [1]*len(self.lmax)
-        else:
-            self._lmin = lmin
-        if boundary_points is None:
-            self._boundary_points = [2]*len(self._lmax)
-        else:
-            self._boundary_points = boundary_points
-        assert (len(self._lmin) == len(self._lmax))
-        for i in range(len(lmax)):
-            assert (lmin[i] <= lmax[i])
-        self._combination_dictionary = compute_combination_dictionary(
-            lmin, lmax)
-        assert (self._combination_dictionary is not None)
-        self._graph = None
-
-    def get_necessary_sparse_grid_spaces(self) -> set:
-        lmax_reduced = [max(self._lmax[i]-1, self._lmin[i])
-                        for i in range(len(self._lmax))]
-        return get_downward_closed_set_from_level_vectors(compute_active_set(self._lmin, lmax_reduced))
-
     def assign_remaining_with_little_intersection_but_load_balanced(self, partitioned_schemes: list(CombinationScheme)) -> list(CombinationScheme):
         levels = self.get_levels_of_nonzero_coefficient()
         # filter out levels that are already assigned
@@ -387,7 +362,7 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
         # assert that all levels can go somewhere for free
         assert all([(len(shadow_dict[level]) > 0) for level in shadow_dict])
         max_num_shadowing = max([len(shadow_dict[level])
-                                for level in shadow_dict])
+                                 for level in shadow_dict])
         single_shadowed = [
             level for level in shadow_dict if len(shadow_dict[level]) == 1]
         # the subspaces belonging to single-shadowed grids are interesting because they can be left out of the between-partition communication
@@ -438,14 +413,6 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
         assert (len(test_levels) == 0)
 
         return partitioned_schemes
-
-    def get_graph(self) -> nx.Graph:
-        if self._graph is None:
-            self._main_diagonal = [np.array(l, dtype=int)
-                                   for l in compute_active_set(self._lmin, self._lmax)]
-            self._graph = get_graph_from_active_set(
-                self._main_diagonal)
-        return self._graph, self._main_diagonal
 
     def split_scheme_metis(self, num_partitions: int = 2,
                            objtype='vol',
@@ -513,6 +480,39 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
 
         return partitioned_schemes
 
+
+class CombinationSchemeFromMaxLevel(CombinationScheme):
+    def __init__(self, lmax, lmin=None, boundary_points=None):
+        self._lmax = lmax
+        if lmin is None:
+            self._lmin = [1]*len(self.lmax)
+        else:
+            self._lmin = lmin
+        if boundary_points is None:
+            self._boundary_points = [2]*len(self._lmax)
+        else:
+            self._boundary_points = boundary_points
+        assert (len(self._lmin) == len(self._lmax))
+        for i in range(len(lmax)):
+            assert (lmin[i] <= lmax[i])
+        self._combination_dictionary = compute_combination_dictionary(
+            lmin, lmax)
+        assert (self._combination_dictionary is not None)
+        self._graph = None
+
+    def get_necessary_sparse_grid_spaces(self) -> set:
+        lmax_reduced = [max(self._lmax[i]-1, self._lmin[i])
+                        for i in range(len(self._lmax))]
+        return get_downward_closed_set_from_level_vectors(compute_active_set(self._lmin, lmax_reduced))
+
+    def get_graph(self) -> nx.Graph:
+        if self._graph is None:
+            self._main_diagonal = [np.array(l, dtype=int)
+                                   for l in compute_active_set(self._lmin, self._lmax)]
+            self._graph = get_graph_from_active_set(
+                self._main_diagonal)
+        return self._graph, self._main_diagonal
+
     def split_scheme_level_sum(self, num_partitions: int = 2) -> list(CombinationScheme):
         assert (num_partitions == 2)
         main_diagonal = [np.array(l, dtype=int)
@@ -569,6 +569,20 @@ class CombinationSchemeFromCombinationDictionary(CombinationScheme):
             self._boundary_points = [2]*len(self._lmax)
         else:
             self._boundary_points = boundary_points
+        self._graph = None
+
+    # two assumptions: levels are singly connected and
+    # the active front has the same level sum
+    def get_graph(self) -> nx.Graph:
+        if self._graph is None:
+            main_diagonal_sum = np.max(
+                [np.sum(l) for l in self._combination_dictionary.keys()])
+            ic(main_diagonal_sum)
+            self._main_diagonal = [np.array(l, dtype=int)
+                                   for l in self._combination_dictionary.keys() if np.sum(l) == main_diagonal_sum]
+            self._graph = get_graph_from_active_set(
+                self._main_diagonal)
+        return self._graph, self._main_diagonal
 
 
 class CombinationSchemeFromFile(CombinationSchemeFromCombinationDictionary):
