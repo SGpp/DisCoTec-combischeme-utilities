@@ -330,7 +330,9 @@ class CombinationScheme():
     def add_component(self, level: tuple, coefficient: float) -> None:
         self._combination_dictionary[level] = coefficient
 
-    def assign_remaining_with_little_intersection_but_load_balanced(self, partitioned_schemes: list(CombinationScheme)) -> list(CombinationScheme):
+    def assign_remaining_with_little_intersection_but_load_balanced(self, partitioned_schemes: list(CombinationScheme),
+                                                                    target_partition_weights: list(float)) -> list(CombinationScheme):
+        assert (len(partitioned_schemes) == len(target_partition_weights))
         levels = self.get_levels_of_nonzero_coefficient()
         # filter out levels that are already assigned
         for scheme in partitioned_schemes:
@@ -390,7 +392,8 @@ class CombinationScheme():
                         # assign to partition with the lowest current number of DOF
                         candidates = shadow_dict[level]
                         candidates.sort(reverse=False, key=lambda i: get_num_dof_of_full_grids(
-                            partitioned_schemes[i].get_levels_of_nonzero_coefficient(), self.get_boundary_points()))
+                            partitioned_schemes[i].get_levels_of_nonzero_coefficient(), self.get_boundary_points()) /
+                            target_partition_weights[i])
                         assign_to = candidates[0]
                         partitioned_schemes[assign_to].add_component(
                             level, self.get_coefficient(level))
@@ -475,8 +478,13 @@ class CombinationScheme():
         partitioned_schemes = [CombinationSchemeFromCombinationDictionary({tuple(main_diagonal[i]): 1 for i in range(
             len(main_diagonal)) if parts[i] == p}, boundary_points=self.get_boundary_points()) for p in range(num_partitions)]
 
+        if 'tpwgts' in metis_kwargs:
+            target_partition_weights = metis_kwargs.get('tpwgts')
+        else:
+            target_partition_weights = [1/num_partitions]*num_partitions
+
         partitioned_schemes = self.assign_remaining_with_little_intersection_but_load_balanced(
-            partitioned_schemes)
+            partitioned_schemes, target_partition_weights)
 
         return partitioned_schemes
 
@@ -547,8 +555,9 @@ class CombinationSchemeFromMaxLevel(CombinationScheme):
         partitioned_schemes = [CombinationSchemeFromCombinationDictionary({tuple(main_diagonal[i]): 1 for i in range(
             len(main_diagonal)) if parts[i] == p}, boundary_points=self.get_boundary_points()) for p in range(num_partitions)]
 
+        target_partition_weights = [1/2.]*2.
         partitioned_schemes = self.assign_remaining_with_little_intersection_but_load_balanced(
-            partitioned_schemes)
+            partitioned_schemes, target_partition_weights)
 
         return partitioned_schemes
 
