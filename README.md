@@ -51,6 +51,10 @@ python3 create_combischeme.py --lmin 1 2 3 4 --lmax 5 6 7 8
 ```
 
 which will place a `.json` file in your folder that has the combination technique memory requirement in its file name. For the minimum and maximum level parameters above, it will be `scheme_10.34_MiB.json`.
+
+
+## Divide combination schemes (e.g. for assigning to different systems)
+
 Along the same lines, you can then split this scheme into two parts with
 
 ```sh
@@ -75,10 +79,27 @@ python3 create_large_assigned_schemes.py --lmin 1 1 1 1 1 1 --lmax 18 18 18 18 1
 
 because this allows the code to use some optimizations which will make it run a lot faster.
 
+As an alternative, you can use the METIS-based heuristic partitioning with 
+
+```sh
+python3 divide_combischeme_metis.py --scheme_file scheme_10.34_MiB.json --num_partitions=2 --target_partition_weights 0.5 0.5
+```
+or the one-step variant
+
+```sh
+python3 divide_combischeme_metis.py --lmin 1 1 1 1 1 1 --lmax 18 18 18 18 18 18 --num_partitions=2 --target_partition_weights 0.5 0.5
+```
+
+The level-sum criterion and METIS heuristic approach will deliver the same results for small schemes and fair splits (= all METIS partitions are weighted equally). 
+
+As an example, this split of the scheme `lmin=(1, 1, 1, 1), lmax=(6, 6, 6, 6)` is generated as part of the tests, and is equal for both approaches:
+
+![graph visualization of the scheme lmin=(1, 1, 1, 1), lmax=(6, 6, 6, 6), when distributed to four parts](metis_assignment_4d_4parts.png)
+
 ## Current limitations
 
-- always assumes both boundary points on level 0
-- only 50/50 splits of divided combination scheme
+- always assumes some default on the number of boundary points, which may need to be adjusted in source
+- only "regular" combination schemes implemented (level difference in each dimension is equal), no [tilted planes](https://doi.org/10.1007/978-3-642-31703-3_10) etc.
 - memory computations assume 8 byte data types such as double
 
 ## Acknowledgements
