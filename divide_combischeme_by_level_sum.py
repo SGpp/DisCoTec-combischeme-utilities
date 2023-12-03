@@ -20,7 +20,7 @@ if __name__ == "__main__":
     scheme = combischeme_utils.CombinationSchemeFromFile(filename)
 
     dim = scheme.get_dimensionality()
-    boundary = [2]*dim
+    boundary = [1]*dim
     lmax = scheme.get_lmax()
     ic(dim, lmax)
 

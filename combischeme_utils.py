@@ -429,6 +429,7 @@ class CombinationScheme():
                            **metis_kwargs) -> list(CombinationScheme):
         # import metis only if required
         import metis
+        import pydot
 
         G, main_diagonal = self.get_graph()
 
@@ -472,6 +473,7 @@ class CombinationScheme():
         nx.draw(G, pos=nx.drawing.layout.spring_layout(G),
                 with_labels=True, node_color=parts, vmin=-1)
 
+        nx.drawing.nx_pydot.write_dot(G, "main_diagonal_graph.dot")
         # transfer back to the ordering we had in the main diagonal
         parts = [G.nodes[str(level)]['parts'] for level in main_diagonal]
 
